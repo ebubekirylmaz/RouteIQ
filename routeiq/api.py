@@ -40,6 +40,7 @@ def create_app(tiers=None, labels=None, db_path=None):
     def route_request(req: RouteRequest):
         result = route(req.text, app.state.labels, app.state.tiers)
         payload = asdict(result)
+        payload["degraded"] = payload.pop("error") is not None
         payload["request_id"] = app.state.store.log(req.text, result)
         return payload
     

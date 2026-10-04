@@ -19,3 +19,5 @@ tiers:
     price_in_per_m: 0.09
     price_out_per_m: 0.30
     accept_threshold: 0.90
+    timeout: 10
+    max_attempts: 2

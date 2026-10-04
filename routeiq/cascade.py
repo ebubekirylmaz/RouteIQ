@@ -1,7 +1,10 @@
 import time
+import logging
 from dataclasses import dataclass
 
 
+
+logger = logging.getLogger(__name__)
 @dataclass
 class RouteResult:
     label: str | None
@@ -27,6 +30,7 @@ def route(text, labels, tiers):
         try:
             p = clf.classify(text, labels)
         except Exception as e:
+            logger.warning("tier %s failed: %s", tier["name"], e)
             error = f"{tier['name']}: {e}"
             continue
         pred, used_tier = p, tier

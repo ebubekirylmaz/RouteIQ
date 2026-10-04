@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from fakes import Fake
+from fakes import Boom, Fake
 from routeiq.api import create_app
 
 LABELS = ["a", "b"]
@@ -42,6 +42,7 @@ def test_confident_request_is_accepted_and_not_queued(tmp_path):
         assert body["label"] == "a"
         assert "request_id" in body
         assert client.get("/review").json() == []
+        assert body["degraded"] is False
 
 
 def test_unsure_request_goes_to_review_queue_with_suggestion(tmp_path):
@@ -105,3 +106,14 @@ def test_too_long_text_is_rejected(tmp_path):
 def test_review_limit_out_of_range_is_rejected(tmp_path):
     with unsure_client(tmp_path) as client:
         assert client.get("/review?limit=0").status_code == 422
+
+
+def test_tier_failure_is_reported_as_degraded_without_leaking_details(tmp_path):
+    with make_client(tmp_path, Fake("a", 0.3), Boom()) as client:
+        response = client.post("/route", json={"text": "x"})
+        body = response.json()
+        assert response.status_code == 200
+        assert body["action"] == "human_review"
+        assert body["label"] == "a"
+        assert body["degraded"] is True
+        assert "error" not in body

@@ -120,3 +120,11 @@ def test_missing_api_key_raises(monkeypatch):
     monkeypatch.setattr("routeiq.models.openrouter.load_dotenv", lambda: None)
     with pytest.raises(RuntimeError):
         OpenRouterClassifier("m", 0.09, 0.30)
+
+
+def test_max_attempts_is_configurable(monkeypatch):
+    clf, calls = make_classifier(monkeypatch, [FakeResponse(429), FakeResponse(429)])
+    clf.max_attempts = 2
+    with pytest.raises(RuntimeError):
+        clf.classify("x", LABELS)
+    assert len(calls) == 2

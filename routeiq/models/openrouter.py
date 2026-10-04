@@ -11,7 +11,7 @@ API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
 class OpenRouterClassifier:
-    def __init__(self, model_id, price_in_per_m, price_out_per_m, timeout=30):
+    def __init__(self, model_id, price_in_per_m, price_out_per_m, timeout=30, max_attempts=6):
         load_dotenv()
         self.api_key = os.getenv("OPENROUTER_API_KEY")
         if not self.api_key:
@@ -20,7 +20,7 @@ class OpenRouterClassifier:
         self.price_in = price_in_per_m
         self.price_out = price_out_per_m
         self.timeout = timeout
-
+        self.max_attempts = max_attempts
     def _request(self, text, labels):
         payload = {
             "model": self.model_id,
@@ -58,7 +58,7 @@ class OpenRouterClassifier:
             "provider": {"require_parameters": True},
         }
         headers = {"Authorization": f"Bearer {self.api_key}"}
-        for attempt in range(6):
+        for attempt in range(self.max_attempts):
             try:
                 r = httpx.post(API_URL, json=payload, headers=headers, timeout=self.timeout)
             except httpx.TransportError:
