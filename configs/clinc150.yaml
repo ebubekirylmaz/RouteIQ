@@ -12,4 +12,4 @@ labels:
 tiers:
   - name: baseline
     model: sklearn_tfidf_logreg
-    accept_threshold: 0.85
+    accept_threshold: 0.5
