@@ -1,6 +1,7 @@
 import os
 from routeiq.integrations.jsonl import JsonlExport
 from routeiq.integrations.webhook import WebhookIntegration
+from routeiq.integrations.mock_erp_adapter import MockErpIntegration
 
 def build_target(config):
     target = config.get("target") or {"type": "none"}
@@ -15,5 +16,6 @@ def build_target(config):
         return WebhookIntegration(
             target["url"], secret=secret,
         )
-        
+    if kind == "mock_erp":
+        return MockErpIntegration(target["url"])
     raise ValueError(f"unknown target type: {kind}")
