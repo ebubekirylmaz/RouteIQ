@@ -20,3 +20,16 @@ class Boom:
     def classify(self, text, labels):
         self.calls += 1
         raise RuntimeError("boom")
+
+
+class Recorder:
+    """Entegrasyon hedefi: gelen kayıtları saklar, istenirse hata fırlatır."""
+
+    def __init__(self, fail=False):
+        self.records = []
+        self.fail = fail
+
+    def send(self, record):
+        if self.fail:
+            raise RuntimeError("target down")
+        self.records.append(record)
