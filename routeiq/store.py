@@ -20,6 +20,11 @@ CREATE TABLE IF NOT EXISTS requests (
 )
 """
 
+NEW_COLUMNS = {
+    "delivery_status": "TEXT",
+    "delivery_error": "TEXT",
+    "delivered_at": "TEXT",
+}
 
 def _now():
     return datetime.now(timezone.utc).isoformat()
@@ -30,6 +35,7 @@ class Store:
         self.path = str(path)
         with closing(self._connect()) as conn, conn:
             conn.execute(SCHEMA)
+            self._migrate(conn)
 
     def _connect(self):
         conn = sqlite3.connect(self.path)
@@ -72,3 +78,26 @@ class Store:
                 (final_label, _now(), request_id),
             )
             return cur.rowcount == 1
+        
+    def _migrate(self, conn):
+        existing = {row["name"] for row in conn.execute("PRAGMA table_info(requests)")}
+        for name, sql_type in NEW_COLUMNS.items():
+            if name not in existing:
+                conn.execute(f"ALTER TABLE requests ADD COLUMN {name} {sql_type}")
+
+    def mark_delivery(self, request_id, status, error=None):
+        delivered_at = _now() if status == "sent" else None
+        with closing(self._connect()) as conn, conn:
+            conn.execute(
+                "UPDATE requests SET delivery_status = ?, delivery_error = ?,"
+                " delivered_at = ? WHERE id = ?",
+                (status, error, delivered_at, request_id),
+            )
+
+    def failed_deliveries(self, limit=100):
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                "SELECT id FROM requests WHERE delivery_status = 'failed' ORDER BY id LIMIT ?",
+                (limit,)
+            ).fetchall()
+        return [r["id"] for r in rows]
