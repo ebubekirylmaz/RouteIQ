@@ -13,3 +13,9 @@ tiers:
   - name: baseline
     model: sklearn_tfidf_logreg
     accept_threshold: 0.5
+  - name: llm
+    model: openrouter
+    model_id: mistralai/mistral-small-3.2-24b-instruct
+    price_in_per_m: 0.09
+    price_out_per_m: 0.30
+    accept_threshold: 0.70
