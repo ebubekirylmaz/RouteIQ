@@ -7,7 +7,7 @@ name = "routeiq"
 version = "1.0.0"
 requires-python = ">=3.11"     # >=3.11
 dependencies = [
- "scikit-learn", "pandas", "pyyaml", "datasets", "joblib", "python-dotenv"
+ "scikit-learn", "pandas", "pyyaml", "datasets", "joblib", "python-dotenv", "httpx"
 ]
 
 [project.optional-dependencies]
