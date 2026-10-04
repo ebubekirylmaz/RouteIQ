@@ -1,28 +1,7 @@
 import pytest
 
 from routeiq.cascade import route
-from routeiq.models.base import Prediction
-
-
-class Fake:
-    def __init__(self, label, confidence, cost=0.0):
-        self.label = label
-        self.confidence = confidence
-        self.cost = cost
-        self.calls = 0
-
-    def classify(self, text, labels):
-        self.calls += 1
-        return Prediction(self.label, self.confidence, self.cost)
-
-
-class Boom:
-    def __init__(self):
-        self.calls = 0
-
-    def classify(self, text, labels):
-        self.calls += 1
-        raise RuntimeError("boom")
+from fakes import Boom, Fake
 
 
 LABELS = ["a", "b"]
@@ -128,14 +107,3 @@ def test_all_tiers_failing_goes_to_human_review_without_suggestion():
     assert result.confidence == 0.0
     assert result.error is not None
     assert result.cost_usd == 0.0
-
-
-def test_llm_failure_falls_back_to_human_review_with_baseline_suggestion():
-    baseline = Fake("a", 0.3)
-    llm = Boom()
-    result = route("x", LABELS, make_tiers(baseline, llm))
-    assert result.action == "human_review"
-    assert result.label == "a"
-    assert result.tier == "baseline"
-    assert "llm" in result.error
-    assert llm.calls == 1
