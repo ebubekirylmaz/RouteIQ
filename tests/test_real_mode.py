@@ -13,7 +13,10 @@ from routeiq.api import create_app
 def configure(tmp_path, monkeypatch, target_yaml):
     config_file = tmp_path / "cfg.yaml"
     config_file.write_text(
-        "domain: test\nlabels: [a, b]\ntiers: []\n" + target_yaml, encoding="utf-8"
+        "domain: test\nlabels: [a, b]\n"
+        "tiers:\n  - name: baseline\n    model: sklearn_tfidf_logreg\n    accept_threshold: 0.5\n"
+        + target_yaml,
+        encoding="utf-8",
     )
     tiers = [({"name": "baseline", "accept_threshold": 0.5}, Fake("a", 0.9))]
     monkeypatch.setenv("ROUTEIQ_CONFIG", str(config_file))
