@@ -121,16 +121,19 @@ docker compose up --build
 domain: clinc150
 data_source: public   # CLINC150 (clinc_oos): subset of intents + out-of-scope
 
-labels:               # N intents chosen from the dataset, plus the out-of-scope class
-  - <intent_1>
-  - <intent_2>
-  - <intent_3>
+labels:               # intents chosen from the dataset, plus the out-of-scope class
+  - report_lost_card
+  - damaged_card
+  - card_declined
+  - report_fraud
+  - freeze_account
   - out_of_scope
 
 tiers:
   - name: baseline
     model: sklearn_tfidf_logreg
-    accept_threshold: 0.85
+    accept_threshold: 0.5   # picked on the validation set; the baseline's scores are
+                            # low (underconfident), at 0.85 about 87% of requests escalate
 
   - name: llm
     model: openrouter
@@ -190,7 +193,19 @@ CLINC150 contains user queries covering 150 intents across 10 domains, plus an o
 
 The out-of-scope class is the reason for choosing this dataset. A routing system must also recognise requests it should not route automatically, so these examples exercise the escalation and human-review path directly instead of only measuring easy, in-scope cases.
 
-`data/prepare_clinc.py` downloads the dataset, keeps the chosen intents, maps the out-of-scope examples to `out_of_scope`, and writes train and test files under `data/`.
+`data/prepare_clinc.py` downloads the dataset, keeps the chosen intents, maps the out-of-scope examples to `out_of_scope`, and writes train, validation and test files under `data/`.
+
+**Chosen scenario: bank support requests.** The five intents are `report_lost_card`, `damaged_card`, `card_declined`, `report_fraud` and `freeze_account`. They are semantically close (for example lost vs. damaged card), so the baseline makes real mistakes and the cascade has something to fix. The other 145 CLINC150 intents are dropped; only the original `oos` examples become `out_of_scope`.
+
+| Split | Per intent | `out_of_scope` | Total |
+|---|---|---|---|
+| train | 100 | 250 | 750 |
+| validation | 20 | 100 | 200 |
+| test | 30 | 150 | 300 |
+
+The raw test split has 1,000 out-of-scope examples against 30 per intent, which would make accuracy mostly a measure of the out-of-scope class. The script therefore samples 150 of them (`random_state=42`). Train and validation are left as they are.
+
+**Baseline (validation only).** TF-IDF (unigrams and bigrams) with logistic regression reaches accuracy 0.94 and macro-F1 0.915. The weakest classes are `damaged_card` and `report_fraud`. Its confidence is lower than its accuracy suggests: the mean confidence is 0.68 on correct predictions and 0.39 on wrong ones. Test results are reported only in the evaluation section below.
 
 <!-- TODO: confirm the dataset license in its source repository and state it here. The Hugging Face dataset card did not specify one. -->
 
@@ -277,6 +292,8 @@ Tests cover the cascade decisions at threshold boundaries, adapter contracts and
 - LLM cost figures depend on current provider pricing and should be rechecked.
 - The CLINC150 setup uses a subset of intents plus out-of-scope. Results do not transfer to the full 150-intent task.
 - CLINC150 queries are short, single-turn utterances. Real business emails are longer and messier.
+- Many `card_declined` examples are one template sentence with small variations, so this intent is easy to learn and can make results look better than they would on varied text.
+- The validation set has only 20 examples per intent, so one mistake moves a class's recall by 5 points. Small differences between classes may be noise.
 
 ## Roadmap
 
