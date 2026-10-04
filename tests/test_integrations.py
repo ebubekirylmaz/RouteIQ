@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import json
 
-import httpx
+import httpx2
 import pytest
 
 from routeiq.cascade import RouteResult
@@ -87,11 +87,11 @@ class FakeResponse:
 
     def raise_for_status(self):
         if self.status_code >= 400:
-            raise httpx.HTTPStatusError("error", request=None, response=self)
+            raise httpx2.HTTPStatusError("error", request=None, response=self)
 
 
 def patch_post(monkeypatch, responses):
-    """httpx.post ve time.sleep'i değiştirir. Yapılan çağrıların listesini döndürür."""
+    """httpx2.post ve time.sleep'i değiştirir. Yapılan çağrıların listesini döndürür."""
     calls = []
 
     def fake_post(url, **kwargs):
@@ -101,7 +101,7 @@ def patch_post(monkeypatch, responses):
             raise r
         return r
 
-    monkeypatch.setattr("routeiq.integrations.webhook.httpx.post", fake_post)
+    monkeypatch.setattr("routeiq.integrations.webhook.httpx2.post", fake_post)
     monkeypatch.setattr("routeiq.integrations.webhook.time.sleep", lambda s: None)
     return calls
 
@@ -139,7 +139,7 @@ def test_webhook_retries_on_503_then_succeeds(monkeypatch):
 
 
 def test_webhook_retries_on_network_error_then_succeeds(monkeypatch):
-    calls = patch_post(monkeypatch, [httpx.ConnectError("down"), FakeResponse(200)])
+    calls = patch_post(monkeypatch, [httpx2.ConnectError("down"), FakeResponse(200)])
     WebhookIntegration("http://hook.test/in").send(RECORD)
     assert len(calls) == 2
 
@@ -153,7 +153,7 @@ def test_webhook_gives_up_after_all_attempts(monkeypatch):
 
 def test_webhook_does_not_retry_client_errors(monkeypatch):
     calls = patch_post(monkeypatch, [FakeResponse(400)])
-    with pytest.raises(httpx.HTTPStatusError):
+    with pytest.raises(httpx2.HTTPStatusError):
         WebhookIntegration("http://hook.test/in").send(RECORD)
     assert len(calls) == 1
 

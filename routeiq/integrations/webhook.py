@@ -3,7 +3,7 @@ import hmac
 import json
 import time
 
-import httpx
+import httpx2
 
 RETRY_STATUS = (429, 500, 502, 503, 504)
 
@@ -24,8 +24,8 @@ class WebhookIntegration:
 
         for attempt in range(self.max_attempts):
             try:
-                r = httpx.post(self.url, content=body, headers=headers, timeout=self.timeout)
-            except httpx.TransportError:
+                r = httpx2.post(self.url, content=body, headers=headers, timeout=self.timeout)
+            except httpx2.TransportError:
                 time.sleep(2 ** attempt)
                 continue
             if r.status_code in RETRY_STATUS:

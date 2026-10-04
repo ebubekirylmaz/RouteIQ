@@ -1,7 +1,7 @@
 import os
 import json
 import time
-import httpx
+import httpx2
 import math
 from dotenv import load_dotenv
 
@@ -60,8 +60,8 @@ class OpenRouterClassifier:
         headers = {"Authorization": f"Bearer {self.api_key}"}
         for attempt in range(self.max_attempts):
             try:
-                r = httpx.post(API_URL, json=payload, headers=headers, timeout=self.timeout)
-            except httpx.TransportError:
+                r = httpx2.post(API_URL, json=payload, headers=headers, timeout=self.timeout)
+            except httpx2.TransportError:
                 time.sleep(2 ** attempt)
                 continue
             if r.status_code in (429, 500, 502, 503):

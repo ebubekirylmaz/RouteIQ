@@ -32,7 +32,7 @@ def route_http_to(client, monkeypatch):
     def fake_post(url, content, headers, timeout):
         return client.post(url, content=content, headers=headers)
 
-    monkeypatch.setattr("routeiq.integrations.webhook.httpx.post", fake_post)
+    monkeypatch.setattr("routeiq.integrations.webhook.httpx2.post", fake_post)
 
 
 def test_to_ticket_maps_fields():

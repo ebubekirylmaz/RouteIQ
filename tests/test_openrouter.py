@@ -1,6 +1,6 @@
 import math
 
-import httpx
+import httpx2
 import pytest
 
 from routeiq.models.openrouter import OpenRouterClassifier
@@ -36,7 +36,7 @@ class FakeResponse:
 
     def raise_for_status(self):
         if self.status_code >= 400:
-            raise httpx.HTTPStatusError("error", request=None, response=self)
+            raise httpx2.HTTPStatusError("error", request=None, response=self)
 
 
 def make_classifier(monkeypatch, responses):
@@ -53,7 +53,7 @@ def make_classifier(monkeypatch, responses):
             raise r
         return r
 
-    monkeypatch.setattr("routeiq.models.openrouter.httpx.post", fake_post)
+    monkeypatch.setattr("routeiq.models.openrouter.httpx2.post", fake_post)
     return OpenRouterClassifier("test-model", 0.09, 0.30), calls
 
 
@@ -94,7 +94,7 @@ def test_retry_after_header_is_respected(monkeypatch):
 
 
 def test_network_error_is_retried(monkeypatch):
-    responses = [httpx.ConnectError("down"), FakeResponse(payload=good_payload())]
+    responses = [httpx2.ConnectError("down"), FakeResponse(payload=good_payload())]
     clf, calls = make_classifier(monkeypatch, responses)
     pred = clf.classify("x", LABELS)
     assert pred.label == "card_declined"
@@ -110,7 +110,7 @@ def test_gives_up_after_all_retries(monkeypatch):
 
 def test_client_error_is_not_retried(monkeypatch):
     clf, calls = make_classifier(monkeypatch, [FakeResponse(401)])
-    with pytest.raises(httpx.HTTPStatusError):
+    with pytest.raises(httpx2.HTTPStatusError):
         clf.classify("x", LABELS)
     assert len(calls) == 1
 

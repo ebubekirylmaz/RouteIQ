@@ -68,7 +68,7 @@ def test_request_flows_through_the_config_into_the_mock_erp(tmp_path, monkeypatc
         def forward(target_url, content, headers, timeout):
             return client.post(target_url, content=content, headers=headers)
 
-        monkeypatch.setattr("routeiq.integrations.webhook.httpx.post", forward)
+        monkeypatch.setattr("routeiq.integrations.webhook.httpx2.post", forward)
 
         body = client.post("/route", json={"text": "my card got declined"}).json()
 
