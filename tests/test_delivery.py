@@ -206,3 +206,82 @@ def test_retry_resends_a_human_decision_with_the_human_label(tmp_path):
         assert target.records[0]["label"] == "a"
         assert target.records[0]["source"] == "human_review"
         assert stored(client, rid)["delivery_status"] == "sent"
+
+
+# --- stale pending deliveries and /stats ----------------------------------------
+
+def age_delivery(client, request_id):
+    """Teslimatın 'pending' yazıldığı zamanı eskitir: sunucu görev bitmeden kapanmış gibi."""
+    import sqlite3
+
+    conn = sqlite3.connect(client.app.state.store.path)
+    conn.execute(
+        "UPDATE requests SET delivery_updated_at = ? WHERE id = ?",
+        ("2000-01-01T00:00:00+00:00", request_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_retry_picks_up_a_delivery_stuck_in_pending(tmp_path):
+    target = Recorder()
+    with confident_client(tmp_path, target) as client:
+        rid = client.post("/route", json={"text": "hello"}).json()["request_id"]
+        target.records.clear()
+        client.app.state.store.mark_delivery(rid, "pending")
+        age_delivery(client, rid)
+
+        response = client.post("/deliveries/retry")
+
+        assert response.json() == {"retried": 1, "sent": 1, "failed": 0}
+        assert len(target.records) == 1
+        assert stored(client, rid)["delivery_status"] == "sent"
+
+
+def test_retry_leaves_a_fresh_pending_delivery_alone(tmp_path):
+    target = Recorder()
+    with confident_client(tmp_path, target) as client:
+        rid = client.post("/route", json={"text": "hello"}).json()["request_id"]
+        target.records.clear()
+        client.app.state.store.mark_delivery(rid, "pending")
+
+        response = client.post("/deliveries/retry")
+
+        assert response.json() == {"retried": 0, "sent": 0, "failed": 0}
+        assert target.records == []
+        assert stored(client, rid)["delivery_status"] == "pending"
+
+
+def test_stats_reflects_routed_requests(tmp_path):
+    with confident_client(tmp_path, Recorder()) as client:
+        client.post("/route", json={"text": "one"})
+        client.post("/route", json={"text": "two"})
+        response = client.get("/stats")
+        assert response.status_code == 200
+        stats = response.json()
+        assert stats["requests"] == 2
+        assert stats["accepted_by_tier"] == {"baseline": 2}
+        assert stats["human_review"] == 0
+        assert stats["delivery"]["sent"] == 2
+        assert stats["delivery"]["retryable"] == 0
+
+
+def test_stats_shows_review_and_failed_deliveries(tmp_path):
+    with unsure_client(tmp_path, Recorder(fail=True)) as client:
+        rid = client.post("/route", json={"text": "hello"}).json()["request_id"]
+        stats = client.get("/stats").json()
+        assert stats["human_review"] == 1
+        assert stats["review"] == {"pending": 1, "resolved": 0}
+
+        client.post(f"/review/{rid}", json={"label": "a"})
+        stats = client.get("/stats").json()
+        assert stats["review"] == {"pending": 0, "resolved": 1}
+        assert stats["delivery"]["failed"] == 1
+        assert stats["delivery"]["retryable"] == 1
+
+
+def test_stats_on_an_empty_database(tmp_path):
+    with confident_client(tmp_path, None) as client:
+        stats = client.get("/stats").json()
+        assert stats["requests"] == 0
+        assert stats["delivery"]["retryable"] == 0

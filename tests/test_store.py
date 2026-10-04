@@ -1,5 +1,7 @@
 import sqlite3
 
+import pytest
+
 from routeiq.cascade import RouteResult
 from routeiq.store import NEW_COLUMNS, Store
 
@@ -129,3 +131,122 @@ def test_failed_deliveries_respects_limit(tmp_path):
     for rid in ids:
         store.mark_delivery(rid, "failed", "x")
     assert store.failed_deliveries(limit=2) == ids[:2]
+
+
+# --- delivery_updated_at, retryable deliveries and stats -----------------------
+
+def set_raw(path, request_id, **columns):
+    """Veritabanını Store'u atlayarak değiştirir (zamanı eskitmek için)."""
+    assignments = ", ".join(f"{name} = ?" for name in columns)
+    conn = sqlite3.connect(path)
+    conn.execute(f"UPDATE requests SET {assignments} WHERE id = ?", (*columns.values(), request_id))
+    conn.commit()
+    conn.close()
+
+
+LONG_AGO = "2000-01-01T00:00:00+00:00"
+
+
+def test_mark_delivery_records_when_the_status_changed(tmp_path):
+    store = Store(tmp_path / "a.db")
+    rid = store.log("x", accepted())
+    assert store.get(rid)["delivery_updated_at"] is None
+    for status in ("pending", "failed", "sent"):
+        store.mark_delivery(rid, status)
+        assert store.get(rid)["delivery_updated_at"] is not None
+
+
+def test_sent_delivery_has_matching_timestamps(tmp_path):
+    store = Store(tmp_path / "a.db")
+    rid = store.log("x", accepted())
+    store.mark_delivery(rid, "sent")
+    row = store.get(rid)
+    assert row["delivered_at"] == row["delivery_updated_at"]
+
+
+def test_retryable_includes_failed_deliveries(tmp_path):
+    store = Store(tmp_path / "a.db")
+    rid = store.log("x", accepted())
+    store.mark_delivery(rid, "failed", "boom")
+    assert store.retryable_deliveries() == [rid]
+
+
+def test_retryable_skips_a_fresh_pending_delivery(tmp_path):
+    store = Store(tmp_path / "a.db")
+    rid = store.log("x", accepted())
+    store.mark_delivery(rid, "pending")
+    assert store.retryable_deliveries() == []
+
+
+def test_retryable_includes_a_stale_pending_delivery(tmp_path):
+    path = tmp_path / "a.db"
+    store = Store(path)
+    rid = store.log("x", accepted())
+    store.mark_delivery(rid, "pending")
+    set_raw(path, rid, delivery_updated_at=LONG_AGO)
+    assert store.retryable_deliveries() == [rid]
+
+
+def test_retryable_treats_pending_without_a_timestamp_as_stale(tmp_path):
+    path = tmp_path / "a.db"
+    store = Store(path)
+    rid = store.log("x", accepted())
+    store.mark_delivery(rid, "pending")
+    set_raw(path, rid, delivery_updated_at=None)
+    assert store.retryable_deliveries() == [rid]
+
+
+def test_retryable_skips_sent_and_untouched_requests(tmp_path):
+    store = Store(tmp_path / "a.db")
+    sent = store.log("one", accepted())
+    store.log("two", accepted())
+    store.mark_delivery(sent, "sent")
+    assert store.retryable_deliveries() == []
+
+
+def test_retryable_is_ordered_and_respects_limit(tmp_path):
+    store = Store(tmp_path / "a.db")
+    ids = [store.log(str(i), accepted()) for i in range(3)]
+    for rid in reversed(ids):
+        store.mark_delivery(rid, "failed", "x")
+    assert store.retryable_deliveries() == ids
+    assert store.retryable_deliveries(limit=2) == ids[:2]
+
+
+def test_stats_on_an_empty_database(tmp_path):
+    stats = Store(tmp_path / "a.db").stats()
+    assert stats["requests"] == 0
+    assert stats["accepted_by_tier"] == {}
+    assert stats["human_review"] == 0
+    assert stats["review"] == {"pending": 0, "resolved": 0}
+    assert stats["degraded"] == 0
+    assert stats["cost_usd"] == 0
+    assert stats["latency_ms"] == {"avg": 0, "p95": 0.0}
+    assert stats["delivery"] == {"pending": 0, "sent": 0, "failed": 0, "retryable": 0}
+
+
+def test_stats_counts_requests_by_outcome(tmp_path):
+    store = Store(tmp_path / "a.db")
+    store.log("1", RouteResult("a", 0.9, "baseline", "accepted", 0.0, 10.0))
+    second = store.log("2", RouteResult("a", 0.9, "baseline", "accepted", 0.0, 20.0))
+    third = store.log("3", RouteResult("b", 0.9, "llm", "accepted", 0.002, 600.0))
+    review = store.log(
+        "4", RouteResult("b", 0.3, "llm", "human_review", 0.001, 700.0, error="llm: x")
+    )
+    store.mark_delivery(second, "failed", "x")
+    store.mark_delivery(third, "pending")
+
+    stats = store.stats()
+
+    assert stats["requests"] == 4
+    assert stats["accepted_by_tier"] == {"baseline": 2, "llm": 1}
+    assert stats["human_review"] == 1
+    assert stats["review"] == {"pending": 1, "resolved": 0}
+    assert stats["degraded"] == 1
+    assert stats["cost_usd"] == pytest.approx(0.003)
+    assert stats["latency_ms"]["avg"] == pytest.approx(332.5)
+    assert stats["latency_ms"]["p95"] == 700.0
+    assert stats["delivery"] == {"pending": 1, "sent": 0, "failed": 1, "retryable": 1}
+
+    store.resolve(review, "b")
+    assert store.stats()["review"] == {"pending": 0, "resolved": 1}

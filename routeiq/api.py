@@ -81,11 +81,15 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
     def retry_deliveries(limit: int = Query(100, ge=1, le=500)):
         if app.state.target is None:
             raise HTTPException(status_code=409, detail="no delivery target configured")
-        ids = app.state.store.failed_deliveries(limit)
+        ids = app.state.store.retryable_deliveries(limit)
         for request_id in ids:
             deliver(app.state.store, app.state.target, request_id)
         statuses = [app.state.store.get(i)["delivery_status"] for i in ids]
         return {"retried": len(ids), "sent": statuses.count("sent"), "failed": statuses.count("failed")}
+
+    @app.get("/stats")
+    def stats():
+        return app.state.store.stats()
 
     return app
 
