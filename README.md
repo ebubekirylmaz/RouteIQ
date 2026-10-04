@@ -92,27 +92,47 @@ Route a request:
 ```bash
 curl -X POST http://localhost:8000/route \
   -H "Content-Type: application/json" \
-  -d '{"text": "<an example request>"}'
+  -d '{"text": "my card got declined at the store"}'
 ```
 
 Example response:
 
 ```json
 {
-  "label": "<predicted_intent>",
-  "confidence": 0.94,
+  "label": "card_declined",
+  "confidence": 0.7005,
   "tier": "baseline",
   "action": "accepted",
-  "latency_ms": 12,
-  "cost_usd": 0.0
+  "cost_usd": 0.0,
+  "latency_ms": 26.8,
+  "degraded": false,
+  "request_id": 1
 }
 ```
 
-Or run everything with Docker:
+Docker support is planned (see [Roadmap](#roadmap)).
+
+## API
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /health` | Liveness check |
+| `POST /route` | Body `{"text": "..."}` (1 to 5,000 characters). Runs the cascade and stores the request |
+| `GET /review?limit=50` | Requests waiting for a person, oldest first, with the model's suggestion |
+| `POST /review/{id}` | Body `{"label": "..."}`. Records the person's decision |
+
+`action` is `accepted` or `human_review`. `tier` names the tier that produced the label (or the last suggestion). `degraded` is `true` when a tier failed and the cascade fell back to what it had; the error details are logged and stored, not returned.
+
+Resolving a review item returns `404` for an unknown id, `409` if it is already resolved or never needed review, and `422` for a label that is not in the config.
 
 ```bash
-docker compose up --build
+curl http://localhost:8000/review
+curl -X POST http://localhost:8000/review/1 \
+  -H "Content-Type: application/json" \
+  -d '{"label": "out_of_scope"}'
 ```
+
+Every request is stored in a SQLite file (text, result, cost, latency, and the reviewer's decision). Settings are read from the environment: `ROUTEIQ_CONFIG` (default `configs/clinc150.yaml`) and `ROUTEIQ_DB` (default `routeiq.db` in the repository root). Interactive documentation is served at `/docs`.
 
 ## Configuration
 
@@ -302,13 +322,16 @@ Tests cover the cascade decisions at threshold boundaries, adapter contracts and
 - CLINC150 queries are short, single-turn utterances. Real business emails are longer and messier.
 - Many `card_declined` examples are one template sentence with small variations, so this intent is easy to learn and can make results look better than they would on varied text.
 - The validation set has only 20 examples per intent, so one mistake moves a class's recall by 5 points. Small differences between classes may be noise.
+- The API has no authentication. Anyone who can reach `/review` can read the queued texts and resolve items. Put it behind a gateway or add authentication before exposing it.
+- Request texts are stored unencrypted in a local SQLite file, with no retention limit or anonymization. A real deployment needs a retention policy and access control.
+- Requests that reach the LLM wait for it. With the configured budget (10 s timeout, 2 attempts) a request can take about 21 s before it falls back to human review.
 
 ## Roadmap
 
 - [x] Baseline training and evaluation
 - [x] OpenRouter adapter with structured output
 - [x] Cascade routing and threshold sweep
-- [ ] FastAPI service and human-review queue
+- [x] FastAPI service and human-review queue
 - [ ] Mock ERP integration
 - [ ] Docker setup
 - [ ] Jev adapter (if access is available)
