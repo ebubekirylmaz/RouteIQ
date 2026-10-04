@@ -132,17 +132,15 @@ labels:               # intents chosen from the dataset, plus the out-of-scope c
 tiers:
   - name: baseline
     model: sklearn_tfidf_logreg
-    accept_threshold: 0.5   # picked on the validation set; the baseline's scores are
-                            # low (underconfident), at 0.85 about 87% of requests escalate
+    accept_threshold: 0.7   # chosen on the validation set; the baseline's scores are
+                            # underconfident, so thresholds are rank cut-offs, not probabilities
 
   - name: llm
     model: openrouter
-    model_id: <openrouter-model-id>
-    price_in_per_m: 0.0     # USD per 1M input tokens, from the model's page
-    price_out_per_m: 0.0    # USD per 1M output tokens
-    accept_threshold: 0.70
-
-fallback: human_review
+    model_id: mistralai/mistral-small-3.2-24b-instruct
+    price_in_per_m: 0.09    # USD per 1M input tokens, fallback only: the real cost
+    price_out_per_m: 0.30   # USD per 1M output tokens, is read from the API response
+    accept_threshold: 0.90
 
 target:
   type: mock_erp
@@ -230,8 +228,10 @@ The mock ERP exposes OData-style REST endpoints with entity names modeled on com
 ## Evaluation
 
 ```bash
-python -m routeiq.evaluate --config configs/clinc150.yaml --report reports/
+python -m routeiq.evaluate --config configs/clinc150.yaml --split test
 ```
+
+Tier predictions are cached under `reports/`, so repeated runs do not call the LLM again. Useful flags: `--split val|test` (default `val`), `--refresh` to recompute the cached predictions, and `--sweep` to also print the full threshold grid.
 
 The report covers:
 
@@ -239,21 +239,29 @@ The report covers:
 - **Cost per 1,000 requests**
 - **Latency** (p50, p95)
 - **Escalation rate** and **human-review rate**
-- **Accuracy vs. cost curve** across threshold settings
+- **Accuracy vs. cost** across threshold settings (`--sweep` prints the grid)
 - **Calibration**: when the system says 90% confident, is it right about 90% of the time?
 
 ### Results: CLINC150
 
-> To be filled from real runs. Do not publish numbers that were not measured. Synthetic example domains get their own table, reported separately.
+Measured on the held-out test split (300 examples: 30 per intent plus 150 out-of-scope). The thresholds (baseline 0.7, LLM 0.9) were chosen on the validation split and not changed after seeing the test results. The LLM tier is `mistralai/mistral-small-3.2-24b-instruct` via OpenRouter. Synthetic example domains get their own table, reported separately.
 
 | Setup | Accuracy | Macro-F1 | Cost / 1k req | p50 latency | p95 latency |
 |---|---|---|---|---|---|
-| Baseline only | TBD | TBD | TBD | TBD | TBD |
-| LLM only | TBD | TBD | TBD | TBD | TBD |
-| Cascade (baseline then LLM) | TBD | TBD | TBD | TBD | TBD |
-| Cascade + human review | TBD | TBD | TBD | TBD | TBD |
+| Baseline only | 0.917 | 0.899 | $0 | 0.2 ms | 0.2 ms |
+| LLM only | 0.983 | 0.976 | $0.0118 | 600 ms | 2.17 s |
+| Cascade (baseline then LLM) | 0.983 | 0.976 | $0.0064 | 559 ms | 1.93 s |
+| Cascade + human review | 0.993 | 0.989 | $0.0064 | 559 ms | 1.93 s |
 
-Key findings: *(write 3 to 4 sentences after the first full run: where the cascade saves money, where it loses accuracy, how well the confidence scores are calibrated)*
+In the cascade, 139 requests (46%) were accepted by the baseline (all correct), 161 (54%) were escalated to the LLM, and 6 (2%) went to human review. The "+ human review" row assumes the reviewer is always right and does not count human time in cost or latency. With 300 examples, a 95% confidence interval on accuracy is roughly ±1.5 points, so the difference between "LLM only" and "Cascade" is not meaningful.
+
+Key findings:
+
+- The LLM is clearly more accurate than the baseline (0.983 vs 0.917 accuracy, 0.976 vs 0.899 macro-F1).
+- The cascade matches the LLM's accuracy at about 54% of its cost. Because only 46% of requests skip the LLM, the median latency barely improves (559 ms vs 600 ms). A lower baseline threshold cuts cost and latency further, at the price of accuracy on the validation set.
+- The baseline's confidence is poorly calibrated (ECE 0.27, it underestimates itself) but ranks well: every request it accepted above 0.7 was correct. The LLM's confidence is well calibrated overall (ECE 0.012).
+- Human review on 2% of requests removed 3 of the cascade's 5 errors. The remaining 2 are lost-or-stolen-card messages that the LLM labeled `report_fraud` with confidence above 0.99, a genuinely ambiguous boundary that a confidence threshold cannot catch.
+- With this inexpensive LLM the absolute saving is small (about $5 per million requests). The cascade pays off more with a pricier LLM tier or when most requests can be answered without waiting for one.
 
 ## Project structure
 
@@ -297,9 +305,9 @@ Tests cover the cascade decisions at threshold boundaries, adapter contracts and
 
 ## Roadmap
 
-- [ ] Baseline training and evaluation
+- [x] Baseline training and evaluation
 - [x] OpenRouter adapter with structured output
-- [ ] Cascade routing and threshold sweep
+- [x] Cascade routing and threshold sweep
 - [ ] FastAPI service and human-review queue
 - [ ] Mock ERP integration
 - [ ] Docker setup
