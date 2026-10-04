@@ -298,7 +298,7 @@ Tests cover the cascade decisions at threshold boundaries, adapter contracts and
 ## Roadmap
 
 - [ ] Baseline training and evaluation
-- [ ] OpenRouter adapter with structured output
+- [x] OpenRouter adapter with structured output
 - [ ] Cascade routing and threshold sweep
 - [ ] FastAPI service and human-review queue
 - [ ] Mock ERP integration

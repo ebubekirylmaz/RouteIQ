@@ -8,8 +8,7 @@ def build_classifier(config, tier):
         return SklearnTfidfLogreg(model_path(config, tier["name"]))
     if kind == "openrouter":
         return OpenRouterClassifier(
-            tier["model_id"], tier["price_in_per_m"], tier["price_out_per_m"]
-    )
+            tier["model_id"], tier["price_in_per_m"], tier["price_out_per_m"])
     raise ValueError(f"unknown model type: {kind}")
 
 
