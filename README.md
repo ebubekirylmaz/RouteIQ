@@ -110,7 +110,14 @@ Example response:
 }
 ```
 
-Docker support is planned (see [Roadmap](#roadmap)).
+Or run it with Docker, without a local Python setup:
+
+```bash
+cp .env.example .env             # add OPENROUTER_API_KEY
+docker compose up --build
+```
+
+The first build takes a few minutes: it installs the dependencies, downloads CLINC150, and trains the baseline inside the image. The API is then available at `http://localhost:8000`. It is published on localhost only, because it has no authentication. The API key is read from `.env` when the container starts and is not stored in the image. The SQLite database lives in the `routeiq-data` volume and survives restarts; `docker compose down -v` deletes it. The mock ERP keeps its tickets in memory, so they reset on restart.
 
 ## API
 
@@ -321,6 +328,8 @@ routeiq/
 │   ├── models/              # classifier adapters and registry
 │   └── integrations/        # JSONL export, webhook, mock ERP
 ├── tests/
+├── Dockerfile
+├── docker-compose.yml
 ├── LICENSE
 ├── pyproject.toml
 └── README.md
@@ -358,7 +367,7 @@ Tests cover the cascade decisions at threshold boundaries, the OpenRouter adapte
 - [x] Cascade routing and threshold sweep
 - [x] FastAPI service and human-review queue
 - [x] Mock ERP integration
-- [ ] Docker setup
+- [x] Docker setup
 - [ ] Example domains with synthetic data, labeled as synthetic (electric-vehicle after-sales, supplier communication, internal requests)
 - [ ] Jev adapter (if access is available)
 - [ ] Dashboard (React + TypeScript): live routing, cost and accuracy charts

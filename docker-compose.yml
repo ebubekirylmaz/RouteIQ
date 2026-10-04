@@ -1,0 +1,17 @@
+services:
+  routeiq:
+    build: .
+    ports:
+      # The API has no authentication, so it is only published on localhost.
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      ROUTEIQ_DB: /data/routeiq.db
+    volumes:
+      - routeiq-data:/data
+    restart: unless-stopped
+
+volumes:
+  routeiq-data:
