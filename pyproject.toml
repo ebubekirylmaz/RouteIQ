@@ -7,11 +7,12 @@ name = "routeiq"
 version = "0.1.0"
 requires-python = ">=3.11"     # >=3.11
 dependencies = [
- "scikit-learn", "pandas", "pyyaml", "datasets", "joblib", "python-dotenv", "httpx2", "fastapi", "uvicorn", "pytest"
+    "scikit-learn", "pandas", "numpy", "pyyaml", "datasets", "joblib",
+    "python-dotenv", "httpx2", "fastapi", "uvicorn",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest"]              
+dev = ["pytest"]           
 
 [tool.setuptools.packages.find]
 include = ["routeiq*"]

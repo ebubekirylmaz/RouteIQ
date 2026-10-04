@@ -96,14 +96,6 @@ class Store:
                 (status, error, delivered_at, now, request_id),
             )
 
-    def failed_deliveries(self, limit=100):
-        with closing(self._connect()) as conn:
-            rows = conn.execute(
-                "SELECT id FROM requests WHERE delivery_status = 'failed' ORDER BY id LIMIT ?",
-                (limit,)
-            ).fetchall()
-        return [r["id"] for r in rows]
-    
     def retryable_deliveries(self, limit=100, stale_seconds=300):
         cutoff = (datetime.now(timezone.utc) - timedelta(seconds=stale_seconds)).isoformat()
         with closing(self._connect()) as conn:

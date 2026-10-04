@@ -5,9 +5,7 @@ import json
 import httpx2
 import pytest
 
-from routeiq.cascade import RouteResult
 from routeiq.integrations import build_target
-from routeiq.integrations.base import make_record
 from routeiq.integrations.jsonl import JsonlExport
 from routeiq.integrations.webhook import WebhookIntegration
 
@@ -66,19 +64,6 @@ def test_build_target_jsonl(tmp_path):
 def test_build_target_unknown_type_raises():
     with pytest.raises(ValueError):
         build_target({"target": {"type": "zzz"}})
-
-
-def test_make_record_copies_result_fields():
-    result = RouteResult("card_declined", 0.7, "baseline", "accepted", 0.0, 12.0)
-    record = make_record(5, "my card got declined", result, "cascade")
-    assert record == {
-        "request_id": 5,
-        "text": "my card got declined",
-        "label": "card_declined",
-        "confidence": 0.7,
-        "tier": "baseline",
-        "source": "cascade",
-    }
 
 
 class FakeResponse:

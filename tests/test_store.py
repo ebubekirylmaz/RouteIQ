@@ -112,27 +112,6 @@ def test_mark_delivery_failed_keeps_error_and_no_delivery_time(tmp_path):
     assert row["delivered_at"] is None
 
 
-def test_failed_deliveries_lists_only_failed_in_order(tmp_path):
-    store = Store(tmp_path / "a.db")
-    first = store.log("one", accepted())
-    second = store.log("two", accepted())
-    third = store.log("three", accepted())
-    fourth = store.log("four", accepted())
-    store.mark_delivery(first, "failed", "x")
-    store.mark_delivery(second, "sent")
-    store.mark_delivery(fourth, "failed", "y")
-    assert store.failed_deliveries() == [first, fourth]
-    assert third not in store.failed_deliveries()
-
-
-def test_failed_deliveries_respects_limit(tmp_path):
-    store = Store(tmp_path / "a.db")
-    ids = [store.log(str(i), accepted()) for i in range(3)]
-    for rid in ids:
-        store.mark_delivery(rid, "failed", "x")
-    assert store.failed_deliveries(limit=2) == ids[:2]
-
-
 # --- delivery_updated_at, retryable deliveries and stats -----------------------
 
 def set_raw(path, request_id, **columns):

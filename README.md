@@ -52,18 +52,18 @@ RouteIQ explores a simple idea: **use the cheapest model that is confident enoug
 
 ## Features
 
-- **Config-driven.** Categories, thresholds, models and targets live in YAML. A new use case needs a new config, not new code.
+- **Config-driven.** Categories, thresholds, models and targets live in YAML. A new use case needs labeled data and a config; the label descriptions in the LLM prompt are still written in code (see [Limitations](#limitations)).
 - **Pluggable models.** Every model implements one interface, so swapping providers is a config change.
 - **Confidence-based cascade.** Two thresholds decide between accept, escalate and human review.
 - **Human-in-the-loop queue.** Low-confidence items are stored with the model's suggestion for a person to confirm or correct.
 - **Integration adapters.** Webhook, mock ERP (OData-style REST) and JSON Lines export out of the box. Delivery runs after the response, and its status is tracked per request.
 - **Built-in evaluation.** Accuracy, macro-F1, cost per 1,000 requests, p50/p95 latency, calibration and escalation rate, all from one command.
-- **Domain-agnostic.** Ships with two example domains to show it is not tied to one dataset.
+- **One worked example.** Ships with a bank-support scenario built on the public CLINC150 dataset. More example domains are planned (see [Roadmap](#roadmap)).
 
 ## Quick start
 
 ```bash
-git clone https://github.com/<your-username>/routeiq.git
+git clone https://github.com/ebubekirylmaz/routeiq.git
 cd routeiq
 
 python -m venv .venv
@@ -120,7 +120,8 @@ Docker support is planned (see [Roadmap](#roadmap)).
 | `POST /route` | Body `{"text": "..."}` (1 to 5,000 characters). Runs the cascade and stores the request |
 | `GET /review?limit=50` | Requests waiting for a person, oldest first, with the model's suggestion |
 | `POST /review/{id}` | Body `{"label": "..."}`. Records the person's decision |
-| `POST /deliveries/retry?limit=100` | Resends deliveries that failed, oldest first |
+| `POST /deliveries/retry?limit=100` | Resends deliveries that failed, or that have been pending for more than 5 minutes (for example after a restart), oldest first |
+| `GET /stats` | Totals: requests, accepted per tier, human-review and delivery counts, cost, average and p95 latency |
 
 `action` is `accepted` or `human_review`. `tier` names the tier that produced the label (or the last suggestion). `degraded` is `true` when a tier failed and the cascade fell back to what it had; the error details are logged and stored, not returned.
 
@@ -164,7 +165,7 @@ The record sent to `webhook` and `jsonl` looks like this:
 
 For human-resolved requests `label` is the reviewer's choice, `tier` is `human` and `source` is `human_review`.
 
-The mock ERP runs inside the same application (only when the config targets it) under `/mock-erp/api/tickets`. It accepts `POST`, lists with `$top` and `$skip`, and returns `@odata.count`. Posting the same `ExternalID` twice returns the existing ticket instead of creating a second one, so redeliveries are harmless. It keeps its data in memory.
+The mock ERP runs inside the same application (only when the config targets it) under `/mock-erp/api/tickets`. It accepts `POST`, lists with `$top` and `$skip`, and returns `@odata.count`. Posting the same `ExternalID` twice returns the existing ticket instead of creating a second one, so redeliveries are harmless. It keeps its data in memory. It imitates the shape of an enterprise API and does not connect to any real ERP product.
 
 ## Configuration
 
@@ -224,18 +225,14 @@ Included adapters:
 |---|---|---|
 | `sklearn_tfidf_logreg` | Cheap, fast baseline | Trained locally |
 | `openrouter` | LLM tier with structured output, any model available on OpenRouter | Needs `OPENROUTER_API_KEY` |
-| `jev` | Direct decision model | Optional, depends on access |
 
 ## Datasets
 
 | Domain | Source | Notes |
 |---|---|---|
 | `clinc150` | CLINC150 (`clinc_oos` on Hugging Face), public intent-classification dataset | Main benchmark, real human-written text, includes out-of-scope queries |
-| `ev_after_sales` | Synthetic, generated with an LLM and reviewed by hand | Example domain: electric vehicle after-sales |
-| `ev_supplier_comms` | Synthetic, generated with an LLM and reviewed by hand | Example domain: supplier communication |
-| `ev_internal_requests` | Synthetic, generated with an LLM and reviewed by hand | Example domain: internal requests |
 
-Synthetic data is labeled as synthetic everywhere it is used. No real company data is included. Results on synthetic data are reported separately from the public benchmark, because synthetic text tends to be easier to classify and says less about real-world performance.
+No real company data is included.
 
 ## Main benchmark: CLINC150
 
@@ -257,25 +254,16 @@ The raw test split has 1,000 out-of-scope examples against 30 per intent, which 
 
 **Baseline (validation only).** TF-IDF (unigrams and bigrams) with logistic regression reaches accuracy 0.94 and macro-F1 0.915. The weakest classes are `damaged_card` and `report_fraud`. Its confidence is lower than its accuracy suggests: the mean confidence is 0.68 on correct predictions and 0.39 on wrong ones. Test results are reported only in the evaluation section below.
 
-<!-- TODO: confirm the dataset license in its source repository and state it here. The Hugging Face dataset card did not specify one. -->
+CLINC150 is released under CC BY 3.0 (see the dataset card on Hugging Face). If you use it, cite: Larson et al., "An Evaluation Dataset for Intent Classification and Out-of-Scope Prediction", EMNLP-IJCNLP 2019 (<https://aclanthology.org/D19-1131>).
 
-## Example domains
+## Adding a domain
 
-The core of RouteIQ knows nothing about any industry. To show how a new use case is added, the repository includes three example domains inspired by typical processes of an electric vehicle manufacturer. They are illustrations built from assumptions, not descriptions of any real company's processes.
+The cascade, the evaluation and the integrations do not depend on the CLINC150 data. The bank-support scenario is the one worked example; a new domain takes these steps:
 
-| Config | Incoming text | Example labels | Target record (mock ERP) |
-|---|---|---|---|
-| `ev_after_sales.yaml` | Customer and dealer messages | `warranty_claim`, `spare_part_request`, `battery_or_charging_issue`, `delivery_delay`, `complaint`, `other` | Service notification |
-| `ev_supplier_comms.yaml` | Supplier emails | `delivery_delay`, `quality_issue`, `invoice_question`, `price_update`, `other` | Supplier case |
-| `ev_internal_requests.yaml` | Employee forms | `purchase_request`, `it_support`, `maintenance_request`, `other` | Purchase requisition or ticket |
-
-Adding a domain takes three steps:
-
-1. Create a config under `configs/` with labels, thresholds and a target.
-2. Provide labeled data, or generate synthetic data with `data/prompts/` and review it by hand.
-3. Run `train` and `evaluate`. No code changes are needed.
-
-The mock ERP exposes OData-style REST endpoints with entity names modeled on common enterprise systems. It imitates the shape of such an API and does not connect to any real ERP product.
+1. Prepare labeled `train.csv`, `val.csv` and `test.csv` files (columns `text,label`) under `data/`. `data/prepare_clinc.py` shows how it is done for CLINC150.
+2. Create a config under `configs/` with the labels, thresholds and a target. The config is validated at startup and mistakes are reported with their location.
+3. Write the label descriptions in the system prompt of `routeiq/models/openrouter.py`. They are still specific to the bank-support example (moving them into the config is on the [Roadmap](#roadmap)).
+4. Run `python -m routeiq.train` and `python -m routeiq.evaluate` with the new config.
 
 ## Evaluation
 
@@ -296,7 +284,7 @@ The report covers:
 
 ### Results: CLINC150
 
-Measured on the held-out test split (300 examples: 30 per intent plus 150 out-of-scope). The thresholds (baseline 0.7, LLM 0.9) were chosen on the validation split and not changed after seeing the test results. The LLM tier is `mistralai/mistral-small-3.2-24b-instruct` via OpenRouter. Synthetic example domains get their own table, reported separately.
+Measured on the held-out test split (300 examples: 30 per intent plus 150 out-of-scope). The thresholds (baseline 0.7, LLM 0.9) were chosen on the validation split and not changed after seeing the test results. The LLM tier is `mistralai/mistral-small-3.2-24b-instruct` via OpenRouter.
 
 | Setup | Accuracy | Macro-F1 | Cost / 1k req | p50 latency | p95 latency |
 |---|---|---|---|---|---|
@@ -321,17 +309,19 @@ Key findings:
 routeiq/
 ├── configs/                 # YAML use-case definitions (one per domain)
 ├── data/
-│   ├── prompts/             # prompts used to generate synthetic data
-│   └── ...                  # datasets and generation scripts
+│   └── prepare_clinc.py     # builds the train, validation and test files
 ├── routeiq/
-│   ├── api.py               # FastAPI app
+│   ├── api.py               # FastAPI app: /route, /review, /deliveries/retry, /stats
 │   ├── cascade.py           # threshold-based routing logic
-│   ├── evaluate.py          # metrics and reports
+│   ├── config.py            # config loading and validation
+│   ├── delivery.py          # sends decisions to the target and tracks the status
+│   ├── evaluate.py          # metrics, calibration and threshold sweep
+│   ├── store.py             # SQLite store: requests, review queue, deliveries
 │   ├── train.py             # baseline training
-│   ├── models/              # classifier adapters
-│   └── integrations/        # webhook, mock ERP, export
+│   ├── models/              # classifier adapters and registry
+│   └── integrations/        # JSONL export, webhook, mock ERP
 ├── tests/
-├── docker-compose.yml
+├── LICENSE
 ├── pyproject.toml
 └── README.md
 ```
@@ -342,19 +332,20 @@ routeiq/
 pytest
 ```
 
-Tests cover the cascade decisions at threshold boundaries, adapter contracts and the API routes. LLM calls are mocked in tests.
+Tests cover the cascade decisions at threshold boundaries, the OpenRouter adapter (response parsing, retries), the API routes, the review queue, delivery tracking, the integrations, the SQLite store with its schema migration, and config validation. LLM and network calls are mocked in tests.
 
 ## Limitations
 
 - Confidence scores from different model types are not directly comparable. Calibration is evaluated, and thresholds should be tuned per domain.
-- Benchmarks on public or synthetic data do not guarantee the same results on a real company's data.
+- Benchmarks on public data do not guarantee the same results on a real company's data.
+- The label descriptions in the LLM prompt are written for the bank-support example and live in `routeiq/models/openrouter.py`. A new domain needs them rewritten, and `data/prepare_clinc.py` is specific to CLINC150.
 - The mock ERP only imitates the shape of an enterprise API. A production integration needs authentication, retries and error handling for the real system.
 - LLM cost figures depend on current provider pricing and should be rechecked.
 - The CLINC150 setup uses a subset of intents plus out-of-scope. Results do not transfer to the full 150-intent task.
 - CLINC150 queries are short, single-turn utterances. Real business emails are longer and messier.
 - Many `card_declined` examples are one template sentence with small variations, so this intent is easy to learn and can make results look better than they would on varied text.
 - The validation set has only 20 examples per intent, so one mistake moves a class's recall by 5 points. Small differences between classes may be noise.
-- The API has no authentication. Anyone who can reach `/review` can read the queued texts and resolve items. Put it behind a gateway or add authentication before exposing it.
+- The API has no authentication. Anyone who can reach `/review` or `/stats` can read the queued texts and resolve items. Put it behind a gateway or add authentication before exposing it.
 - Request texts are stored unencrypted in a local SQLite file, with no retention limit or anonymization. A real deployment needs a retention policy and access control.
 - Requests that reach the LLM wait for it. With the configured budget (10 s timeout, 2 attempts) a request can take about 21 s before it falls back to human review.
 - `POST /deliveries/retry` takes the oldest failed deliveries first, so a record that keeps failing can hold back newer ones when the limit is smaller than the backlog.
@@ -368,6 +359,7 @@ Tests cover the cascade decisions at threshold boundaries, adapter contracts and
 - [x] FastAPI service and human-review queue
 - [x] Mock ERP integration
 - [ ] Docker setup
+- [ ] Example domains with synthetic data, labeled as synthetic (electric-vehicle after-sales, supplier communication, internal requests)
 - [ ] Jev adapter (if access is available)
 - [ ] Dashboard (React + TypeScript): live routing, cost and accuracy charts
 - [ ] Threshold auto-tuning from review feedback
@@ -375,4 +367,4 @@ Tests cover the cascade decisions at threshold boundaries, adapter contracts and
 
 ## License
 
-MIT
+MIT, see [LICENSE](LICENSE). The CLINC150 data keeps its own license (CC BY 3.0).
