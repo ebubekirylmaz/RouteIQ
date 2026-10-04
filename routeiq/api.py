@@ -9,6 +9,8 @@ from routeiq.config import ROOT, load_config
 from routeiq.models.registry import build_tiers
 from fastapi import FastAPI, HTTPException, Query
 from routeiq.store import Store
+from routeiq.integrations import mock_erp as mock_erp_module
+
 
 class RouteRequest(BaseModel):
     text: str = Field(min_length=1, max_length=5000)
@@ -17,7 +19,7 @@ class ReviewDecision(BaseModel):
     label: str 
 
 
-def create_app(tiers=None, labels=None, db_path=None):
+def create_app(tiers=None, labels=None, db_path=None, mock_erp=False):
     @asynccontextmanager
     async def lifespan(app):
         if tiers is None:
@@ -31,6 +33,9 @@ def create_app(tiers=None, labels=None, db_path=None):
         yield
 
     app = FastAPI(title="RouteIQ", lifespan=lifespan)
+    if mock_erp:
+        app.state.erp = mock_erp_module.MockErpStore()
+        app.include_router(mock_erp_module.router)
 
     @app.get("/health")
     def health():
