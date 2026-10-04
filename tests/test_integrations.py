@@ -1,11 +1,15 @@
+import hashlib
+import hmac
 import json
 
+import httpx
 import pytest
 
 from routeiq.cascade import RouteResult
 from routeiq.integrations import build_target
 from routeiq.integrations.base import make_record
 from routeiq.integrations.jsonl import JsonlExport
+from routeiq.integrations.webhook import WebhookIntegration
 
 
 def read_lines(path):
@@ -75,3 +79,94 @@ def test_make_record_copies_result_fields():
         "tier": "baseline",
         "source": "cascade",
     }
+
+
+class FakeResponse:
+    def __init__(self, status_code=200):
+        self.status_code = status_code
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise httpx.HTTPStatusError("error", request=None, response=self)
+
+
+def patch_post(monkeypatch, responses):
+    """httpx.post ve time.sleep'i değiştirir. Yapılan çağrıların listesini döndürür."""
+    calls = []
+
+    def fake_post(url, **kwargs):
+        calls.append({"url": url, **kwargs})
+        r = responses[len(calls) - 1]
+        if isinstance(r, Exception):
+            raise r
+        return r
+
+    monkeypatch.setattr("routeiq.integrations.webhook.httpx.post", fake_post)
+    monkeypatch.setattr("routeiq.integrations.webhook.time.sleep", lambda s: None)
+    return calls
+
+
+RECORD = {"request_id": 7, "text": "kartım çalındı", "label": "report_lost_card"}
+
+
+def test_webhook_posts_record_as_json(monkeypatch):
+    calls = patch_post(monkeypatch, [FakeResponse(200)])
+    WebhookIntegration("http://hook.test/in").send(RECORD)
+    assert len(calls) == 1
+    assert calls[0]["url"] == "http://hook.test/in"
+    assert json.loads(calls[0]["content"].decode("utf-8")) == RECORD
+    assert calls[0]["headers"]["Content-Type"] == "application/json"
+
+
+def test_webhook_signs_the_exact_bytes_it_sends(monkeypatch):
+    calls = patch_post(monkeypatch, [FakeResponse(200)])
+    WebhookIntegration("http://hook.test/in", secret="s3").send(RECORD)
+    body = calls[0]["content"]
+    expected = hmac.new(b"s3", body, hashlib.sha256).hexdigest()
+    assert calls[0]["headers"]["X-RouteIQ-Signature"] == "sha256=" + expected
+
+
+def test_webhook_without_secret_sends_no_signature(monkeypatch):
+    calls = patch_post(monkeypatch, [FakeResponse(200)])
+    WebhookIntegration("http://hook.test/in").send(RECORD)
+    assert "X-RouteIQ-Signature" not in calls[0]["headers"]
+
+
+def test_webhook_retries_on_503_then_succeeds(monkeypatch):
+    calls = patch_post(monkeypatch, [FakeResponse(503), FakeResponse(200)])
+    WebhookIntegration("http://hook.test/in").send(RECORD)
+    assert len(calls) == 2
+
+
+def test_webhook_retries_on_network_error_then_succeeds(monkeypatch):
+    calls = patch_post(monkeypatch, [httpx.ConnectError("down"), FakeResponse(200)])
+    WebhookIntegration("http://hook.test/in").send(RECORD)
+    assert len(calls) == 2
+
+
+def test_webhook_gives_up_after_all_attempts(monkeypatch):
+    calls = patch_post(monkeypatch, [FakeResponse(503)] * 3)
+    with pytest.raises(RuntimeError):
+        WebhookIntegration("http://hook.test/in", max_attempts=3).send(RECORD)
+    assert len(calls) == 3
+
+
+def test_webhook_does_not_retry_client_errors(monkeypatch):
+    calls = patch_post(monkeypatch, [FakeResponse(400)])
+    with pytest.raises(httpx.HTTPStatusError):
+        WebhookIntegration("http://hook.test/in").send(RECORD)
+    assert len(calls) == 1
+
+
+def test_build_target_webhook_reads_secret_from_environment(monkeypatch):
+    monkeypatch.setenv("HOOK_SECRET", "abc")
+    config = {"target": {"type": "webhook", "url": "http://x", "secret_env": "HOOK_SECRET"}}
+    target = build_target(config)
+    assert isinstance(target, WebhookIntegration)
+    assert target.secret == "abc"
+
+
+def test_build_target_webhook_without_secret_env():
+    target = build_target({"target": {"type": "webhook", "url": "http://x"}})
+    assert isinstance(target, WebhookIntegration)
+    assert target.secret is None
