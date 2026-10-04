@@ -128,3 +128,21 @@ def test_max_attempts_is_configurable(monkeypatch):
     with pytest.raises(RuntimeError):
         clf.classify("x", LABELS)
     assert len(calls) == 2
+
+def test_request_sends_the_system_prompt_built_from_the_configured_values(monkeypatch):
+    clf, calls = make_classifier(monkeypatch, [FakeResponse(payload=good_payload())])
+    clf.task = "supplier emails"
+    clf.label_descriptions = {"card_declined": "a payment was refused."}
+    clf.classify("my card got declined", LABELS)
+    messages = calls[0]["json"]["messages"]
+    assert messages[0]["role"] == "system"
+    assert messages[0]["content"].startswith("You classify supplier emails into exactly one category.")
+    assert "- card_declined: a payment was refused." in messages[0]["content"]
+    assert messages[1] == {"role": "user", "content": "my card got declined"}
+
+
+def test_request_without_descriptions_still_lists_the_labels(monkeypatch):
+    clf, calls = make_classifier(monkeypatch, [FakeResponse(payload=good_payload())])
+    clf.classify("x", LABELS)
+    content = calls[0]["json"]["messages"][0]["content"]
+    assert "Categories: " + ", ".join(LABELS) + "." in content

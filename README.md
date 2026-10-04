@@ -52,7 +52,7 @@ RouteIQ explores a simple idea: **use the cheapest model that is confident enoug
 
 ## Features
 
-- **Config-driven.** Categories, thresholds, models and targets live in YAML. A new use case needs labeled data and a config; the label descriptions in the LLM prompt are still written in code (see [Limitations](#limitations)).
+- **Config-driven.** Categories, thresholds, models and targets live in YAML. A new use case needs labeled data and a config, including a one-line description of each label for the LLM prompt.
 - **Pluggable models.** Every model implements one interface, so swapping providers is a config change.
 - **Confidence-based cascade.** Two thresholds decide between accept, escalate and human review.
 - **Human-in-the-loop queue.** Low-confidence items are stored with the model's suggestion for a person to confirm or correct.
@@ -189,6 +189,16 @@ labels:               # intents chosen from the dataset, plus the out-of-scope c
   - freeze_account
   - out_of_scope
 
+task: bank customer support messages    # what is being classified, used in the LLM prompt
+
+label_descriptions:                     # one line per label, used in the LLM prompt
+  report_lost_card: the customer lost their card or cannot find it.
+  damaged_card: the card is physically damaged (cracked, burned, bent).
+  card_declined: a payment was refused or the card was not accepted.
+  report_fraud: unauthorized or suspicious charges on the account.
+  freeze_account: the customer wants the account blocked or locked.
+  out_of_scope: anything else, including messages unrelated to banking.
+
 tiers:
   - name: baseline
     model: sklearn_tfidf_logreg
@@ -269,7 +279,7 @@ The cascade, the evaluation and the integrations do not depend on the CLINC150 d
 
 1. Prepare labeled `train.csv`, `val.csv` and `test.csv` files (columns `text,label`) under `data/`. `data/prepare_clinc.py` shows how it is done for CLINC150.
 2. Create a config under `configs/` with the labels, thresholds and a target. The config is validated at startup and mistakes are reported with their location.
-3. Write the label descriptions in the system prompt of `routeiq/models/openrouter.py`. They are still specific to the bank-support example (moving them into the config is on the [Roadmap](#roadmap)).
+3. Describe what is being classified (`task`) and each label (`label_descriptions`) in the config. They are placed in the system prompt of the LLM tier. Every label needs a description, and the descriptions matter: they decide how the LLM treats the confusable labels and the out-of-scope class, so check them on the validation split, not the test split.
 4. Run `python -m routeiq.train` and `python -m routeiq.evaluate` with the new config.
 
 ## Evaluation
@@ -347,7 +357,7 @@ Tests cover the cascade decisions at threshold boundaries, the OpenRouter adapte
 
 - Confidence scores from different model types are not directly comparable. Calibration is evaluated, and thresholds should be tuned per domain.
 - Benchmarks on public data do not guarantee the same results on a real company's data.
-- The label descriptions in the LLM prompt are written for the bank-support example and live in `routeiq/models/openrouter.py`. A new domain needs them rewritten, and `data/prepare_clinc.py` is specific to CLINC150.
+- The prompt wording was written once and not tuned. Different label descriptions can change the LLM's accuracy, especially on the out-of-scope class, and `data/prepare_clinc.py` is specific to CLINC150.
 - The mock ERP only imitates the shape of an enterprise API. A production integration needs authentication, retries and error handling for the real system.
 - LLM cost figures depend on current provider pricing and should be rechecked.
 - The CLINC150 setup uses a subset of intents plus out-of-scope. Results do not transfer to the full 150-intent task.
@@ -368,6 +378,8 @@ Tests cover the cascade decisions at threshold boundaries, the OpenRouter adapte
 - [x] FastAPI service and human-review queue
 - [x] Mock ERP integration
 - [x] Docker setup
+- [ ] Prompt experiments on the validation split: label description wording and retrieved training examples, compared on a cheaper LLM
+- [ ] Automated test that the threshold simulation in `evaluate.py` matches the live cascade
 - [ ] Example domains with synthetic data, labeled as synthetic (electric-vehicle after-sales, supplier communication, internal requests)
 - [ ] Jev adapter (if access is available)
 - [ ] Dashboard (React + TypeScript): live routing, cost and accuracy charts

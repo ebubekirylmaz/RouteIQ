@@ -10,8 +10,19 @@ from routeiq.models.base import Prediction
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
+def build_system_prompt(labels, descriptions=None, task="messages"):
+    lines = [
+        f"You classify {task} into exactly one category.",
+        f"Categories: {', '.join(labels)}.",
+    ]
+    for label in labels:
+        if descriptions and descriptions.get(label):
+            lines.append(f"- {label}: {descriptions[label]}")
+    lines.append("Answer with the single best category.")
+    return "\n".join(lines)
+
 class OpenRouterClassifier:
-    def __init__(self, model_id, price_in_per_m, price_out_per_m, timeout=30, max_attempts=6):
+    def __init__(self, model_id, price_in_per_m, price_out_per_m, timeout=30, max_attempts=6, task="messages", label_descriptions=None):
         load_dotenv()
         self.api_key = os.getenv("OPENROUTER_API_KEY")
         if not self.api_key:
@@ -21,21 +32,14 @@ class OpenRouterClassifier:
         self.price_out = price_out_per_m
         self.timeout = timeout
         self.max_attempts = max_attempts
+        self.task = task
+        self.label_descriptions = label_descriptions
+
     def _request(self, text, labels):
         payload = {
             "model": self.model_id,
             "messages": [
-                {"role": "system", "content": (
-                    "You classify bank customer support messages into exactly one category.\n"
-                    f"Categories: {', '.join(labels)}.\n"
-                    "- report_lost_card: the customer lost their card or cannot find it.\n"
-                    "- damaged_card: the card is physically damaged (cracked, burned, bent).\n"
-                    "- card_declined: a payment was refused or the card was not accepted.\n"
-                    "- report_fraud: unauthorized or suspicious charges on the account.\n"
-                    "- freeze_account: the customer wants the account blocked or locked.\n"
-                    "- out_of_scope: anything else, including messages unrelated to banking.\n"
-                    "Answer with the single best category."
-                )},
+                {"role": "system", "content": build_system_prompt(labels, self.label_descriptions, self.task)},
                 {"role": "user", "content": text},
             ],
             "temperature": 0,

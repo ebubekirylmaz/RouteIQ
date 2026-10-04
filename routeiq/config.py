@@ -24,7 +24,7 @@ TARGET_KEYS = {
     "mock_erp": {"type", "url"},
 }
 TARGET_REQUIRED = {"jsonl": "path", "webhook": "url", "mock_erp": "url"}
-TOP_KEYS = {"domain", "data_source", "labels", "tiers", "target"}
+TOP_KEYS = {"domain", "data_source", "labels", "task", "label_descriptions", "tiers", "target"}
 
 
 def _is_number(value):
@@ -115,6 +115,23 @@ def validate_config(config):
         errors.append("'labels' must contain only non-empty strings")
     elif len(set(labels)) != len(labels):
         errors.append("'labels' contains duplicates")
+
+    if "task" in config and not _is_text(config["task"]):
+        errors.append("'task' must be a non-empty string")
+
+    descriptions = config.get("label_descriptions")
+    if descriptions is not None:
+        if not isinstance(descriptions, dict):
+            errors.append("'label_descriptions' must be a mapping")
+        else:
+            known = set(labels) if isinstance(labels, list) else set()
+            for label in sorted(str(k) for k in set(descriptions) - known):
+                errors.append(f"'label_descriptions' has an unknown label '{label}'")
+            for label in sorted(known - set(descriptions)):
+                errors.append(f"'label_descriptions' is missing a description for '{label}'")
+            for label, text in descriptions.items():
+                if not _is_text(text):
+                    errors.append(f"'label_descriptions.{label}' must be a non-empty string")
 
     tiers = config.get("tiers")
     if not isinstance(tiers, list) or not tiers:

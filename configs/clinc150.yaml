@@ -7,7 +7,18 @@ labels:
   - card_declined
   - report_fraud
   - freeze_account
-  - out_of_scope     
+  - out_of_scope
+
+
+task: bank customer support messages
+
+label_descriptions:
+  report_lost_card: the customer lost their card or cannot find it.
+  damaged_card: the card is physically damaged (cracked, burned, bent).
+  card_declined: a payment was refused or the card was not accepted.
+  report_fraud: unauthorized or suspicious charges on the account.
+  freeze_account: the customer wants the account blocked or locked.
+  out_of_scope: anything else, including messages unrelated to banking.
 
 tiers:
   - name: baseline

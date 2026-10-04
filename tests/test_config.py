@@ -187,3 +187,41 @@ def test_load_config_validates(tmp_path):
     path.write_text(yaml.safe_dump({"domain": "x"}), encoding="utf-8")
     with pytest.raises(ConfigError):
         load_config(path)
+
+
+# --- task and label_descriptions -----------------------------------------------
+
+def test_complete_label_descriptions_are_accepted():
+    validate_config(config(task="tickets", label_descriptions={"a": "first.", "b": "second."}))
+
+
+def test_label_descriptions_and_task_are_optional():
+    cfg = copy.deepcopy(VALID)
+    assert "label_descriptions" not in cfg and "task" not in cfg
+    validate_config(cfg)
+
+
+def test_missing_label_description_is_reported():
+    message = errors_of(config(label_descriptions={"a": "first."}))
+    assert "missing a description for 'b'" in message
+
+
+def test_description_for_an_unknown_label_is_reported():
+    message = errors_of(config(label_descriptions={"a": "x.", "b": "y.", "zzz": "z."}))
+    assert "unknown label 'zzz'" in message
+
+
+@pytest.mark.parametrize("text", ["", None, 5, ["list"]])
+def test_empty_or_non_text_description_is_reported(text):
+    message = errors_of(config(label_descriptions={"a": text, "b": "second."}))
+    assert "label_descriptions.a" in message
+
+
+@pytest.mark.parametrize("value", ["a description", ["a", "b"], 3])
+def test_label_descriptions_must_be_a_mapping(value):
+    assert "must be a mapping" in errors_of(config(label_descriptions=value))
+
+
+@pytest.mark.parametrize("task", ["", 3, ["x"]])
+def test_invalid_task_is_reported(task):
+    assert "'task'" in errors_of(config(task=task))
