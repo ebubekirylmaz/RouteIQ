@@ -56,7 +56,7 @@ RouteIQ explores a simple idea: **use the cheapest model that is confident enoug
 - **Pluggable models.** Every model implements one interface, so swapping providers is a config change.
 - **Confidence-based cascade.** Two thresholds decide between accept, escalate and human review.
 - **Human-in-the-loop queue.** Low-confidence items are stored with the model's suggestion for a person to confirm or correct.
-- **Integration adapters.** Webhook, mock ERP (OData-style REST) and JSON/CSV export out of the box.
+- **Integration adapters.** Webhook, mock ERP (OData-style REST) and JSON Lines export out of the box. Delivery runs after the response, and its status is tracked per request.
 - **Built-in evaluation.** Accuracy, macro-F1, cost per 1,000 requests, p50/p95 latency, calibration and escalation rate, all from one command.
 - **Domain-agnostic.** Ships with two example domains to show it is not tied to one dataset.
 
@@ -120,6 +120,7 @@ Docker support is planned (see [Roadmap](#roadmap)).
 | `POST /route` | Body `{"text": "..."}` (1 to 5,000 characters). Runs the cascade and stores the request |
 | `GET /review?limit=50` | Requests waiting for a person, oldest first, with the model's suggestion |
 | `POST /review/{id}` | Body `{"label": "..."}`. Records the person's decision |
+| `POST /deliveries/retry?limit=100` | Resends deliveries that failed, oldest first |
 
 `action` is `accepted` or `human_review`. `tier` names the tier that produced the label (or the last suggestion). `degraded` is `true` when a tier failed and the cascade fell back to what it had; the error details are logged and stored, not returned.
 
@@ -133,6 +134,37 @@ curl -X POST http://localhost:8000/review/1 \
 ```
 
 Every request is stored in a SQLite file (text, result, cost, latency, and the reviewer's decision). Settings are read from the environment: `ROUTEIQ_CONFIG` (default `configs/clinc150.yaml`) and `ROUTEIQ_DB` (default `routeiq.db` in the repository root). Interactive documentation is served at `/docs`.
+
+## Integrations
+
+Final decisions are sent to a target system: requests the cascade accepted are sent right away, and requests that went to human review are sent once a person resolves them (with the person's label). Delivery happens in the background after the API responds, so a slow or unavailable target never delays the caller. Each request records its delivery status (`pending`, `sent` or `failed`, with the error) in the database, and `POST /deliveries/retry` resends the failed ones.
+
+Delivery is at-least-once: a record can occasionally arrive twice, so the receiving side should deduplicate on `request_id`.
+
+The target is chosen in the config:
+
+```yaml
+target:
+  type: mock_erp          # webhook | mock_erp | jsonl | none (or omit the section)
+  url: http://localhost:8000/mock-erp/api/tickets
+```
+
+| Type | Settings | What it does |
+|---|---|---|
+| `jsonl` | `path` | Appends one JSON object per line to a file |
+| `webhook` | `url`, optional `secret_env` | POSTs the record as JSON. With a secret, the body is signed: header `X-RouteIQ-Signature: sha256=<HMAC-SHA256 of the body>`. Retries network errors, `429` and `5xx` |
+| `mock_erp` | `url` | Sends the record as a ticket to the built-in mock ERP |
+
+The record sent to `webhook` and `jsonl` looks like this:
+
+```json
+{"request_id": 3, "text": "...", "label": "report_lost_card", "confidence": 0.79,
+ "tier": "baseline", "source": "cascade"}
+```
+
+For human-resolved requests `label` is the reviewer's choice, `tier` is `human` and `source` is `human_review`.
+
+The mock ERP runs inside the same application (only when the config targets it) under `/mock-erp/api/tickets`. It accepts `POST`, lists with `$top` and `$skip`, and returns `@odata.count`. Posting the same `ExternalID` twice returns the existing ticket instead of creating a second one, so redeliveries are harmless. It keeps its data in memory.
 
 ## Configuration
 
@@ -325,6 +357,8 @@ Tests cover the cascade decisions at threshold boundaries, adapter contracts and
 - The API has no authentication. Anyone who can reach `/review` can read the queued texts and resolve items. Put it behind a gateway or add authentication before exposing it.
 - Request texts are stored unencrypted in a local SQLite file, with no retention limit or anonymization. A real deployment needs a retention policy and access control.
 - Requests that reach the LLM wait for it. With the configured budget (10 s timeout, 2 attempts) a request can take about 21 s before it falls back to human review.
+- `POST /deliveries/retry` takes the oldest failed deliveries first, so a record that keeps failing can hold back newer ones when the limit is smaller than the backlog.
+- The mock ERP keeps its tickets in memory and the application is designed for a single process; neither is meant for production use.
 
 ## Roadmap
 
@@ -332,7 +366,7 @@ Tests cover the cascade decisions at threshold boundaries, adapter contracts and
 - [x] OpenRouter adapter with structured output
 - [x] Cascade routing and threshold sweep
 - [x] FastAPI service and human-review queue
-- [ ] Mock ERP integration
+- [x] Mock ERP integration
 - [ ] Docker setup
 - [ ] Jev adapter (if access is available)
 - [ ] Dashboard (React + TypeScript): live routing, cost and accuracy charts
