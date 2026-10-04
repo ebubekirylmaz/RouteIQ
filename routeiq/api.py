@@ -2,22 +2,19 @@ import os
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 
-from pydantic import BaseModel, Field
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
 
 from routeiq.cascade import route
 from routeiq.config import ROOT, load_config
-from routeiq.models.registry import build_tiers
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
-from routeiq.store import Store
-from routeiq.integrations import mock_erp as mock_erp_module
 from routeiq.delivery import deliver
 from routeiq.integrations import build_target
-
-class RouteRequest(BaseModel):
-    text: str = Field(min_length=1, max_length=5000)
-
-class ReviewDecision(BaseModel):
-    label: str 
+from routeiq.integrations import mock_erp as mock_erp_module
+from routeiq.models.registry import build_tiers
+from routeiq.schemas import (
+    ErrorResponse, HealthResponse, ReviewDecision, ReviewItem, ReviewResolved,
+    RetryResult, RouteRequest, RouteResponse, StatsResponse,
+)
+from routeiq.store import Store
 
 
 def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=None):
@@ -39,16 +36,21 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
         app.state.store = Store(db_path or os.getenv("ROUTEIQ_DB", str(ROOT / "routeiq.db")))
         yield
 
-    app = FastAPI(title="RouteIQ", lifespan=lifespan)
+    app = FastAPI(
+        title="RouteIQ",
+        lifespan=lifespan,
+        # operationId = function name, so generated TypeScript clients get clean names
+        generate_unique_id_function=lambda route: route.name,
+    )
     if mock_erp:
         app.state.erp = mock_erp_module.MockErpStore()
         app.include_router(mock_erp_module.router)
 
-    @app.get("/health")
+    @app.get("/health", response_model=HealthResponse)
     def health():
         return {"status": "ok"}
 
-    @app.post("/route")
+    @app.post("/route", response_model=RouteResponse)
     def route_request(req: RouteRequest, background: BackgroundTasks):
         result = route(req.text, app.state.labels, app.state.tiers)
         payload = asdict(result)
@@ -59,12 +61,16 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
             app.state.store.mark_delivery(request_id, "pending")
             background.add_task(deliver, app.state.store, app.state.target, request_id)
         return payload
-    
-    @app.get("/review")
+
+    @app.get("/review", response_model=list[ReviewItem])
     def list_review(limit: int = Query(50, ge=1, le=100)):
         return app.state.store.pending(limit)
-    
-    @app.post("/review/{request_id}")
+
+    @app.post(
+        "/review/{request_id}",
+        response_model=ReviewResolved,
+        responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+    )
     def resolve_review(request_id: int, decision: ReviewDecision, background: BackgroundTasks):
         if decision.label not in app.state.labels:
             raise HTTPException(status_code=422, detail="unknown label")
@@ -77,7 +83,11 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
             background.add_task(deliver, app.state.store, app.state.target, request_id)
         return {"id": request_id, "status": "resolved", "final_label": decision.label}
 
-    @app.post("/deliveries/retry")
+    @app.post(
+        "/deliveries/retry",
+        response_model=RetryResult,
+        responses={409: {"model": ErrorResponse}},
+    )
     def retry_deliveries(limit: int = Query(100, ge=1, le=500)):
         if app.state.target is None:
             raise HTTPException(status_code=409, detail="no delivery target configured")
@@ -87,7 +97,7 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
         statuses = [app.state.store.get(i)["delivery_status"] for i in ids]
         return {"retried": len(ids), "sent": statuses.count("sent"), "failed": statuses.count("failed")}
 
-    @app.get("/stats")
+    @app.get("/stats", response_model=StatsResponse)
     def stats():
         return app.state.store.stats()
 
