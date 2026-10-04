@@ -138,3 +138,71 @@ def test_without_a_target_nothing_is_delivered(tmp_path):
         response = client.post("/route", json={"text": "hello"})
         assert response.status_code == 200
         assert stored(client, response.json()["request_id"])["delivery_status"] is None
+
+
+# --- retry -------------------------------------------------------------------
+
+def test_retry_resends_failed_deliveries_once_the_target_recovers(tmp_path):
+    target = Recorder(fail=True)
+    with confident_client(tmp_path, target) as client:
+        rid = client.post("/route", json={"text": "hello"}).json()["request_id"]
+        assert stored(client, rid)["delivery_status"] == "failed"
+
+        target.fail = False
+        response = client.post("/deliveries/retry")
+
+        assert response.status_code == 200
+        assert response.json() == {"retried": 1, "sent": 1, "failed": 0}
+        assert [r["request_id"] for r in target.records] == [rid]
+        assert stored(client, rid)["delivery_status"] == "sent"
+
+
+def test_retry_keeps_failed_status_while_the_target_is_still_down(tmp_path):
+    target = Recorder(fail=True)
+    with confident_client(tmp_path, target) as client:
+        rid = client.post("/route", json={"text": "hello"}).json()["request_id"]
+        response = client.post("/deliveries/retry")
+        assert response.json() == {"retried": 1, "sent": 0, "failed": 1}
+        assert stored(client, rid)["delivery_status"] == "failed"
+
+
+def test_retry_does_not_resend_delivered_records(tmp_path):
+    target = Recorder()
+    with confident_client(tmp_path, target) as client:
+        client.post("/route", json={"text": "hello"})
+        response = client.post("/deliveries/retry")
+        assert response.json() == {"retried": 0, "sent": 0, "failed": 0}
+        assert len(target.records) == 1
+
+
+def test_retry_with_nothing_to_do(tmp_path):
+    with confident_client(tmp_path, Recorder()) as client:
+        response = client.post("/deliveries/retry")
+        assert response.status_code == 200
+        assert response.json() == {"retried": 0, "sent": 0, "failed": 0}
+
+
+def test_retry_without_a_target_returns_409(tmp_path):
+    with confident_client(tmp_path, None) as client:
+        assert client.post("/deliveries/retry").status_code == 409
+
+
+def test_retry_limit_out_of_range_is_rejected(tmp_path):
+    with confident_client(tmp_path, Recorder()) as client:
+        assert client.post("/deliveries/retry?limit=0").status_code == 422
+
+
+def test_retry_resends_a_human_decision_with_the_human_label(tmp_path):
+    target = Recorder(fail=True)
+    with unsure_client(tmp_path, target) as client:
+        rid = client.post("/route", json={"text": "hello"}).json()["request_id"]
+        client.post(f"/review/{rid}", json={"label": "a"})
+        assert stored(client, rid)["delivery_status"] == "failed"
+
+        target.fail = False
+        client.post("/deliveries/retry")
+
+        assert len(target.records) == 1
+        assert target.records[0]["label"] == "a"
+        assert target.records[0]["source"] == "human_review"
+        assert stored(client, rid)["delivery_status"] == "sent"
