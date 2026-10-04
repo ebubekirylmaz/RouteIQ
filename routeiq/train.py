@@ -1,7 +1,6 @@
 import argparse
-from pathlib import Path
 import pandas as pd
-import yaml
+from routeiq.config import load_config, model_path, ROOT, MODELS_DIR
 import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -14,10 +13,9 @@ def main():
     parser.add_argument("--config", required=True)
     args = parser.parse_args()
 
-    with open(args.config) as f:
-        config = yaml.safe_load(f)
+    config = load_config(args.config)
 
-    data_dir = Path(__file__).parent.parent / "data"
+    data_dir = ROOT / "data"
     train = pd.read_csv(data_dir / "train.csv")
     val = pd.read_csv(data_dir / "val.csv")
     test = pd.read_csv(data_dir / "test.csv")
@@ -36,11 +34,10 @@ def main():
     print("macro-F1:", f1_score(val["label"], val_pred, average="macro"))
     print(classification_report(val["label"], val_pred))
 
-    models_dir = Path(__file__).parent.parent / "models"
-    models_dir.mkdir(exist_ok=True)
-    joblib.dump(model, models_dir / "baseline.joblib")
-    print("model kaydedildi")
-
+    MODELS_DIR.mkdir(exist_ok=True)
+    path = model_path(config, "baseline")
+    joblib.dump(model, path)
+    print("model saved to", path)   
 
 if __name__ == "__main__":
     main()
