@@ -58,14 +58,19 @@ class OpenRouterClassifier:
             "provider": {"require_parameters": True},
         }
         headers = {"Authorization": f"Bearer {self.api_key}"}
-        for attempt in range(4):
-            r = httpx.post(API_URL, json=payload, headers=headers, timeout=self.timeout)
-            if r.status_code in (429, 500, 502, 503):
+        for attempt in range(6):
+            try:
+                r = httpx.post(API_URL, json=payload, headers=headers, timeout=self.timeout)
+            except httpx.TransportError:
                 time.sleep(2 ** attempt)
+                continue
+            if r.status_code in (429, 500, 502, 503):
+                wait = float(r.headers.get("retry-after", 2 ** attempt))
+                time.sleep(min(wait, 30))
                 continue
             r.raise_for_status()
             return r.json()
-        r.raise_for_status()
+        raise RuntimeError("OpenRouter request failed after retries")
     
     def classify(self, text, labels):
         data = self._request(text, labels)
