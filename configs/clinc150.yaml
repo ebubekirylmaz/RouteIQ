@@ -1,0 +1,15 @@
+domain: clinc150
+data_source: public
+
+labels:
+  - report_lost_card
+  - damaged_card
+  - card_declined
+  - report_fraud
+  - freeze_account
+  - out_of_scope     
+
+tiers:
+  - name: baseline
+    model: sklearn_tfidf_logreg
+    accept_threshold: 0.85
