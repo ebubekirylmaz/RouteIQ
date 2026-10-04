@@ -53,6 +53,40 @@ def compute_metrics(df, labels):
     }
 
 
+def with_human(sim):
+    out = sim.copy()
+    human = out["action"] == "human_review"
+    out.loc[human, "label"] = out.loc[human, "true"]
+    return out
+
+
+def report_rows(tier_preds, labels, t_base, t_llm):
+    base = dict(tier_preds)["baseline"]
+    llm = dict(tier_preds)["llm"]
+    cascade = simulate_cascade(tier_preds, [t_base, 0.0])
+    cascade_h = with_human(simulate_cascade(tier_preds, [t_base, t_llm]))
+    rows = {
+        "Baseline only": compute_metrics(base, labels),
+        "LLM only": compute_metrics(llm, labels),
+        "Cascade (baseline then LLM)": compute_metrics(cascade, labels),
+        "Cascade + human review": compute_metrics(cascade_h, labels),
+    }
+    return pd.DataFrame(rows).T[["accuracy", "macro_f1", "cost_per_1k", "p50_ms", "p95_ms"]]
+
+
+def calibration(preds, edges=(0.0, 0.5, 0.7, 0.9, 0.99, 1.0001)):
+    d = preds.dropna(subset=["label"]).copy()
+    d["correct"] = d["label"] == d["true"]
+    d["bin"] = pd.cut(d["confidence"], bins=list(edges), right=False)
+    g = d.groupby("bin", observed=True).agg(
+        n=("correct", "size"),
+        confidence=("confidence", "mean"),
+        accuracy=("correct", "mean")
+    )
+    ece = (g["n"] / g["n"].sum() * (g["accuracy"] - g["confidence"]).abs()).sum()
+    return g, ece
+
+
 def simulate_cascade(tier_preds, thresholds):
     """tier_preds: [(ad, DataFrame), ...] cascade sırasıyla; thresholds: aynı sırada eşikler."""
     n = len(tier_preds[0][1])
@@ -114,29 +148,38 @@ def main():
     parser.add_argument("--config", required=True)
     parser.add_argument("--split", default="val")
     parser.add_argument("--refresh", action="store_true")
+    parser.add_argument("--sweep", action="store_true")
     args = parser.parse_args()
 
     config = load_config(args.config)
+    labels = config["labels"]
     df = pd.read_csv(ROOT / "data" / f"{args.split}.csv")
 
-    labels = config["labels"]
-    results = {}
-    for tier, clf in build_tiers(config):
-        preds = cached_predictions(config, tier["name"], clf, args.split, df, args.refresh)
-        results[tier["name"]] = compute_metrics(preds, labels)
-    print(pd.DataFrame(results).T.round(4).to_string())
+    tiers = build_tiers(config)
     tier_preds = [
-        (t["name"], cached_predictions(config, t["name"], c, args.split, df))
-        for t, c in build_tiers(config)
+        (t["name"], cached_predictions(config, t["name"], clf, args.split, df, args.refresh))
+        for t, clf in tiers
     ]
-    thresholds = [t["accept_threshold"] for t, _ in build_tiers(config)]
-    sim = simulate_cascade(tier_preds, thresholds)
-    print(sim["tier"].value_counts().to_dict(), sim["action"].value_counts().to_dict())
-    print(compute_metrics(sim, labels))
-    grid = sweep(tier_preds, labels,
-                 base_grid=[0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
-                 llm_grid=[0.0, 0.7, 0.9, 0.99])
-    print(grid.round(4).to_string(index=False))
+    thresholds = [t["accept_threshold"] for t, _ in tiers]
+
+    results = {name: compute_metrics(preds, labels) for name, preds in tier_preds}
+    print(pd.DataFrame(results).T.round(4).to_string())
+
+    for name, preds in tier_preds:
+        g, ece = calibration(preds)
+        print(f"\n{name} calibration (ECE={ece:.3f})")
+        print(g.round(3).to_string())
+
+    print(f"\nThresholds: baseline={thresholds[0]}, llm={thresholds[1]}")
+    print(report_rows(tier_preds, labels, thresholds[0], thresholds[1]).round(4).to_string())
+
+    if args.sweep:
+        grid = sweep(
+            tier_preds, labels,
+            base_grid=[0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+            llm_grid=[0.0, 0.7, 0.9, 0.99],
+        )
+        print(grid.round(4).to_string(index=False))
 
 
 if __name__ == "__main__":
