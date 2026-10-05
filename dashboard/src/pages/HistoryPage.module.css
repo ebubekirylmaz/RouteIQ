@@ -1,0 +1,65 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.sub {
+  margin: 0 0 1rem;
+  color: var(--muted);
+}
+
+.refresh {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.refresh button,
+.problem button {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.refresh button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.count {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+}
+
+.busy {
+  opacity: 0.6;
+}
+
+.empty {
+  padding: 2rem;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.problem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  background: var(--surface);
+}

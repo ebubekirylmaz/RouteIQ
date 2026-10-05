@@ -62,3 +62,23 @@ export function formatCount(value: number): string {
 export function formatLatencyTick(ms: number): string {
   return ms === 0 ? "0" : formatLatency(ms);
 }
+
+const timestamp = new Intl.DateTimeFormat("en-US", {
+  timeZone: "UTC", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
+});
+
+/** A moment as "Oct 5, 14:02:07 UTC". UTC like the charts, so the screens agree and the text does not depend on the machine. */
+export function formatTimestamp(iso: string | null | undefined): string {
+  if (!iso) return "n/a";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "n/a";
+  return `${timestamp.format(date)} UTC`;
+}
+
+/** Cuts a text to `max` characters on a word boundary where possible, and marks the cut with an ellipsis. */
+export function truncate(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  const space = cut.lastIndexOf(" ");
+  return `${(space > max * 0.6 ? cut.slice(0, space) : cut).trimEnd()}…`;
+}

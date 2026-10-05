@@ -13,6 +13,10 @@ export function useRetryDeliveries(onDone?: (result: RetryResult | Error) => voi
     mutationFn: () => retryDeliveries(),
     onSuccess: (result) => onDone?.(result),
     onError: (error) => onDone?.(error),
-    onSettled: () => client.invalidateQueries({ queryKey: queryKeys.stats }),
+    onSettled: () =>
+      Promise.all([
+        client.invalidateQueries({ queryKey: queryKeys.stats }),
+        client.invalidateQueries({ queryKey: queryKeys.requests }),
+      ]),
   });
 }

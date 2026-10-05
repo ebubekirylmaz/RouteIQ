@@ -1,0 +1,60 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.field {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.search {
+  flex: 1 1 14rem;
+}
+
+.field input,
+.field select {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-bottom: 0.45rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.actions button {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

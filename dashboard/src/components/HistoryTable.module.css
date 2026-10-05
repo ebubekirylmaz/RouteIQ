@@ -1,0 +1,129 @@
+.scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.scroll[aria-busy="true"] {
+  opacity: 0.6;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.caption {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  color: var(--muted);
+}
+
+.table th,
+.table td {
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table thead th {
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.open {
+  background: var(--hover);
+}
+
+.toggle {
+  display: block;
+  max-width: 28rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.toggle:hover .text {
+  text-decoration: underline;
+}
+
+.note {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--chart-warm);
+  border-radius: 999px;
+  color: var(--chart-warm);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.delivery {
+  white-space: nowrap;
+}
+
+.ok {
+  color: var(--ok);
+}
+
+.bad {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.neutral {
+  color: var(--muted);
+}
+
+.details td {
+  background: var(--hover);
+}
+
+.full {
+  margin: 0 0 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0;
+}
+
+.facts dt {
+  color: var(--muted);
+}
+
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

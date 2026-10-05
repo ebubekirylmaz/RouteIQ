@@ -26,6 +26,10 @@ export function useResolveReview(onOutcome?: (outcome: ResolveOutcome) => void) 
     onError: (error, variables) => onOutcome?.({ ok: false, ...variables, error }),
     // Returning the promise keeps the mutation pending until the queue is fresh again, so the
     // buttons of a row stay locked until the row is gone.
-    onSettled: () => client.invalidateQueries({ queryKey: queryKeys.review }),
+    onSettled: () =>
+      Promise.all([
+        client.invalidateQueries({ queryKey: queryKeys.review }),
+        client.invalidateQueries({ queryKey: queryKeys.requests }),
+      ]),
   });
 }

@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { App } from "./App";
+import { serveRequestsApi } from "./test/requestsServer";
 import { serveReviewApi } from "./test/reviewServer";
 import { serveStatsApi } from "./test/statsServer";
 import { serveTimeseriesApi } from "./test/timeseriesServer";
@@ -11,6 +12,7 @@ import { renderWithProviders } from "./test/utils";
 // The screens load their data, so the routes need an API to talk to.
 beforeEach(() => {
   serveReviewApi([]);
+  serveRequestsApi();
   serveStatsApi();
   serveTimeseriesApi();
 });

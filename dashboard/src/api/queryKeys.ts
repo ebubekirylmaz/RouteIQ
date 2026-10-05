@@ -8,5 +8,7 @@ export const queryKeys = {
   stats: ["stats"] as const,
   statsWindow: (window: string) => ["stats", window] as const,
   timeseries: (range: string) => ["timeseries", range] as const,
+  requests: ["requests"] as const,
+  requestsPage: (request: object) => ["requests", request] as const,
   reviewPage: (limit: number, offset: number) => ["review", { limit, offset }] as const,
 };

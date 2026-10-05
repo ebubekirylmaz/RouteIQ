@@ -8,13 +8,15 @@ type Props = {
   shown: number;
   total: number;
   disabled?: boolean;
+  /** What the pages are of, for people who navigate by landmarks. */
+  label?: string;
   onPageChange: (page: number) => void;
 };
 
-export function Pager({ page, pageSize, shown, total, disabled = false, onPageChange }: Props) {
+export function Pager({ page, pageSize, shown, total, disabled = false, label = "Pages of the review queue", onPageChange }: Props) {
   const last = pageCount(total, pageSize) - 1;
   return (
-    <nav className={styles.pager} aria-label="Pages of the review queue">
+    <nav className={styles.pager} aria-label={label}>
       <button type="button" disabled={disabled || page <= 0} onClick={() => onPageChange(page - 1)}>
         Previous
       </button>
