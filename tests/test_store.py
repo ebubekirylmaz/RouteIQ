@@ -229,3 +229,141 @@ def test_stats_counts_requests_by_outcome(tmp_path):
 
     store.resolve(review, "b")
     assert store.stats()["review"] == {"pending": 0, "resolved": 1}
+
+
+# --- list_requests ---------------------------------------------------------------
+
+def make_store_with_history(tmp_path):
+    """Beş istek: kabul, kabul (LLM), insana düşen, çözülmüş insan kararı, çöken katman."""
+    store = Store(tmp_path / "a.db")
+    ids = {}
+    ids["accepted_baseline"] = store.log(
+        "my card got declined", RouteResult("card_declined", 0.9, "baseline", "accepted", 0.0, 1.0)
+    )
+    ids["accepted_llm"] = store.log(
+        "I lost my wallet", RouteResult("report_lost_card", 0.95, "llm", "accepted", 0.001, 600.0)
+    )
+    ids["pending_review"] = store.log(
+        "delete my saved card", RouteResult("freeze_account", 0.6, "llm", "human_review", 0.001, 700.0)
+    )
+    ids["resolved_review"] = store.log(
+        "freeze it please", RouteResult("freeze_account", 0.5, "llm", "human_review", 0.001, 650.0)
+    )
+    store.resolve(ids["resolved_review"], "freeze_account")
+    ids["degraded"] = store.log(
+        "something odd", RouteResult("a", 0.3, "baseline", "human_review", 0.0, 5.0, error="llm: boom")
+    )
+    store.mark_delivery(ids["accepted_baseline"], "sent")
+    store.mark_delivery(ids["accepted_llm"], "failed", "boom")
+    return store, ids
+
+
+def listed_ids(store, **filters):
+    rows, _ = store.list_requests(**filters)
+    return [row["id"] for row in rows]
+
+
+def test_list_requests_without_filters_returns_everything_newest_first(tmp_path):
+    store, ids = make_store_with_history(tmp_path)
+    rows, total = store.list_requests()
+    assert total == 5
+    assert [r["id"] for r in rows] == sorted(ids.values(), reverse=True)
+
+
+def test_list_requests_can_return_the_oldest_first(tmp_path):
+    store, ids = make_store_with_history(tmp_path)
+    assert listed_ids(store, newest_first=False) == sorted(ids.values())
+
+
+def test_list_requests_rows_contain_all_columns(tmp_path):
+    store, ids = make_store_with_history(tmp_path)
+    row = store.list_requests(limit=1, newest_first=False)[0][0]
+    for column in ("id", "created_at", "text", "label", "confidence", "tier", "action", "cost_usd",
+                   "latency_ms", "error", "review_status", "final_label", "resolved_at",
+                   "delivery_status", "delivery_error", "delivered_at"):
+        assert column in row
+
+
+def test_filter_by_action(tmp_path):
+    store, ids = make_store_with_history(tmp_path)
+    assert set(listed_ids(store, action="accepted")) == {ids["accepted_baseline"], ids["accepted_llm"]}
+    assert len(listed_ids(store, action="human_review")) == 3
+
+
+def test_filter_by_tier(tmp_path):
+    store, ids = make_store_with_history(tmp_path)
+    assert listed_ids(store, tier="baseline", newest_first=False) == [
+        ids["accepted_baseline"], ids["degraded"],
+    ]
+
+
+def test_filter_by_review_status(tmp_path):
+    store, ids = make_store_with_history(tmp_path)
+    assert set(listed_ids(store, review_status="pending")) == {ids["pending_review"], ids["degraded"]}
+    assert listed_ids(store, review_status="resolved") == [ids["resolved_review"]]
+
+
+def test_filter_by_delivery_status(tmp_path):
+    store, ids = make_store_with_history(tmp_path)
+    assert listed_ids(store, delivery_status="sent") == [ids["accepted_baseline"]]
+    assert listed_ids(store, delivery_status="failed") == [ids["accepted_llm"]]
+    assert listed_ids(store, delivery_status="pending") == []
+
+
+def test_filter_by_degraded(tmp_path):
+    store, ids = make_store_with_history(tmp_path)
+    assert listed_ids(store, degraded=True) == [ids["degraded"]]
+    assert ids["degraded"] not in listed_ids(store, degraded=False)
+    assert len(listed_ids(store, degraded=False)) == 4
+
+
+def test_filters_combine_with_and(tmp_path):
+    store, ids = make_store_with_history(tmp_path)
+    assert listed_ids(store, action="human_review", tier="llm", review_status="pending") == [
+        ids["pending_review"],
+    ]
+    assert listed_ids(store, action="accepted", review_status="pending") == []
+
+
+def test_text_search_is_a_case_insensitive_substring_match(tmp_path):
+    store, ids = make_store_with_history(tmp_path)
+    assert listed_ids(store, q="WALLET") == [ids["accepted_llm"]]
+    assert set(listed_ids(store, q="card")) == {ids["accepted_baseline"], ids["pending_review"]}
+
+
+@pytest.mark.parametrize("wildcard", ["%", "_", "a_b", "50%"])
+def test_search_treats_percent_and_underscore_literally(tmp_path, wildcard):
+    store, _ = make_store_with_history(tmp_path)
+    assert store.list_requests(q=wildcard)[1] == 0
+    literal = store.log("100% sure, a_b", accepted())
+    assert store.list_requests(q="100%")[0][0]["id"] == literal
+    assert store.list_requests(q="a_b")[0][0]["id"] == literal
+
+
+def test_search_with_a_backslash_and_quote_is_safe(tmp_path):
+    store, _ = make_store_with_history(tmp_path)
+    store.log("it's a back\\slash", accepted())
+    assert store.list_requests(q="back\\slash")[1] == 1
+    assert store.list_requests(q="'; DROP TABLE requests; --")[1] == 0
+    assert store.list_requests()[1] == 6
+
+
+def test_pagination_with_limit_and_offset(tmp_path):
+    store, ids = make_store_with_history(tmp_path)
+    everything = sorted(ids.values())
+    assert listed_ids(store, limit=2, newest_first=False) == everything[:2]
+    assert listed_ids(store, limit=2, offset=2, newest_first=False) == everything[2:4]
+    assert listed_ids(store, limit=2, offset=4, newest_first=False) == everything[4:]
+    assert listed_ids(store, limit=2, offset=10) == []
+
+
+def test_total_ignores_limit_and_offset_but_respects_filters(tmp_path):
+    store, _ = make_store_with_history(tmp_path)
+    rows, total = store.list_requests(limit=1, offset=1)
+    assert len(rows) == 1 and total == 5
+    rows, total = store.list_requests(action="accepted", limit=1)
+    assert len(rows) == 1 and total == 2
+
+
+def test_list_requests_on_an_empty_database(tmp_path):
+    assert Store(tmp_path / "a.db").list_requests() == ([], 0)

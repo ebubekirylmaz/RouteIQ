@@ -1,3 +1,4 @@
+from email.mime import text
 import sqlite3
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
@@ -30,13 +31,41 @@ NEW_COLUMNS = {
 def _now():
     return datetime.now(timezone.utc).isoformat()
 
-
+def _escape_like(text):
+    return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 class Store:
+    FILTER_COLUMNS = ("action", "tier", "review_status", "delivery_status")
+
     def __init__(self, path):
         self.path = str(path)
         with closing(self._connect()) as conn, conn:
             conn.execute(SCHEMA)
             self._migrate(conn)
+
+    def list_requests(self, *, action=None, tier=None, review_status=None,
+                      delivery_status=None, degraded=None, q=None,
+                      limit=50, offset=0, newest_first=True):
+        values = {"action": action, "tier": tier,
+                  "review_status": review_status, "delivery_status": delivery_status}
+        where, params = [], []
+        for column in self.FILTER_COLUMNS:
+            if values[column] is not None:
+                where.append(f"{column} = ?")
+                params.append(values[column])
+        if degraded is not None:
+            where.append("error IS NOT NULL" if degraded else "error IS NULL")
+        if q:
+            where.append("text LIKE ? ESCAPE '\\'")
+            params.append(f"%{_escape_like(q)}%")
+        clause = (" WHERE " + " AND ".join(where)) if where else ""
+        order = "DESC" if newest_first else "ASC"
+        with closing(self._connect()) as conn:
+            total = conn.execute(f"SELECT COUNT(*) FROM requests{clause}", params).fetchone()[0]
+            rows = conn.execute(
+                f"SELECT * FROM requests{clause} ORDER BY id {order} LIMIT ? OFFSET ?",
+                [*params, limit, offset],
+            ).fetchall()
+        return [dict(r) for r in rows], total
 
     def _connect(self):
         conn = sqlite3.connect(self.path)
