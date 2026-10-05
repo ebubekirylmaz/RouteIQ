@@ -11,6 +11,7 @@ LABELS = ["a", "b"]
 
 OPERATIONS = {
     "health": ("get", "/health", "HealthResponse"),
+    "get_config": ("get", "/config", "ConfigResponse"),
     "route_request": ("post", "/route", "RouteResponse"),
     "list_review": ("get", "/review", "ReviewItem"),
     "resolve_review": ("post", "/review/{request_id}", "ReviewResolved"),
@@ -178,3 +179,20 @@ def test_stats_response_matches_the_declared_shape(tmp_path, spec):
     assert set(body) == set(declared)
     assert set(body["delivery"]) == set(schema(spec, "DeliveryCounts")["properties"])
     assert body["requests"] == 1
+
+
+def test_config_response_fields(spec):
+    assert set(schema(spec, "ConfigResponse")["properties"]) == {
+        "domain", "task", "labels", "tiers", "target_type",
+    }
+    assert set(schema(spec, "LabelInfo")["properties"]) == {"name", "description"}
+    assert set(schema(spec, "TierInfo")["properties"]) == {
+        "name", "model", "model_id", "accept_threshold",
+    }
+
+
+def test_config_response_never_declares_a_url_or_path_field(spec):
+    declared = set()
+    for name in ("ConfigResponse", "LabelInfo", "TierInfo"):
+        declared |= set(schema(spec, name)["properties"])
+    assert not {"url", "path", "secret", "secret_env", "price_in_per_m"} & declared

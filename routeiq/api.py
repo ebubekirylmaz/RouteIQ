@@ -12,10 +12,10 @@ from routeiq.integrations import mock_erp as mock_erp_module
 from routeiq.models.registry import build_tiers
 from routeiq.schemas import (
     ErrorResponse, HealthResponse, ReviewDecision, ReviewItem, ReviewResolved,
-    RetryResult, RouteRequest, RouteResponse, StatsResponse,
+    RetryResult, RouteRequest, RouteResponse, StatsResponse, ConfigResponse
 )
 from routeiq.store import Store
-
+from routeiq.views import describe_config
 
 def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=None):
     config = None
@@ -29,10 +29,12 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
             app.state.tiers = build_tiers(config)
             app.state.labels = config["labels"]
             app.state.target = build_target(config)
+            app.state.config_view = describe_config(config=config)
         else:
             app.state.tiers = tiers
             app.state.labels = labels
             app.state.target = target
+            app.state.config_view = describe_config(labels=labels, tiers=tiers)
         app.state.store = Store(db_path or os.getenv("ROUTEIQ_DB", str(ROOT / "routeiq.db")))
         yield
 
@@ -49,6 +51,10 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
     @app.get("/health", response_model=HealthResponse)
     def health():
         return {"status": "ok"}
+    
+    @app.get("/config", response_model=ConfigResponse)
+    def get_config():
+        return app.state.config_view
 
     @app.post("/route", response_model=RouteResponse)
     def route_request(req: RouteRequest, background: BackgroundTasks):

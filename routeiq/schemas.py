@@ -20,6 +20,25 @@ class HealthResponse(BaseModel):
     status: str
 
 
+class LabelInfo(BaseModel):
+    name: str
+    description: str | None
+
+
+class TierInfo(BaseModel):
+    name: str
+    model: str | None
+    model_id: str | None
+    accept_threshold: float
+
+
+class ConfigResponse(BaseModel):
+    domain: str | None
+    task: str | None
+    labels: list[LabelInfo]
+    tiers: list[TierInfo]
+    target_type: str | None
+
 class RouteResponse(BaseModel):
     label: str | None
     confidence: float
