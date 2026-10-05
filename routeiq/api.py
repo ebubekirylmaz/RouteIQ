@@ -1,8 +1,9 @@
 import os
 from contextlib import asynccontextmanager
 from dataclasses import asdict
+from typing import Literal
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Response
 
 from routeiq.cascade import route
 from routeiq.config import ROOT, load_config
@@ -11,11 +12,12 @@ from routeiq.integrations import build_target
 from routeiq.integrations import mock_erp as mock_erp_module
 from routeiq.models.registry import build_tiers
 from routeiq.schemas import (
-    ErrorResponse, HealthResponse, ReviewDecision, ReviewItem, ReviewResolved,
-    RetryResult, RouteRequest, RouteResponse, StatsResponse, ConfigResponse
+    ConfigResponse, ErrorResponse, HealthResponse, RequestItem, ReviewDecision,
+    ReviewItem, ReviewResolved, RetryResult, RouteRequest, RouteResponse, StatsResponse,
 )
 from routeiq.store import Store
-from routeiq.views import describe_config
+from routeiq.views import describe_config, request_item
+
 
 def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=None):
     config = None
@@ -55,6 +57,34 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
     @app.get("/config", response_model=ConfigResponse)
     def get_config():
         return app.state.config_view
+
+    @app.get(
+        "/requests",
+        response_model=list[RequestItem],
+        responses={200: {"headers": {"X-Total-Count": {
+            "description": "Number of requests matching the filters, ignoring limit and offset",
+            "schema": {"type": "integer"},
+        }}}},
+    )
+    def list_requests(
+        response: Response,
+        action: Literal["accepted", "human_review"] | None = None,
+        tier: str | None = Query(None, max_length=50),
+        review_status: Literal["pending", "resolved"] | None = None,
+        delivery_status: Literal["pending", "sent", "failed"] | None = None,
+        degraded: bool | None = None,
+        q: str | None = Query(None, max_length=200),
+        limit: int = Query(50, ge=1, le=200),
+        offset: int = Query(0, ge=0),
+        order: Literal["newest", "oldest"] = "newest",
+    ):
+        rows, total = app.state.store.list_requests(
+            action=action, tier=tier, review_status=review_status,
+            delivery_status=delivery_status, degraded=degraded, q=q,
+            limit=limit, offset=offset, newest_first=(order == "newest"),
+        )
+        response.headers["X-Total-Count"] = str(total)
+        return [request_item(row) for row in rows]
 
     @app.post("/route", response_model=RouteResponse)
     def route_request(req: RouteRequest, background: BackgroundTasks):

@@ -196,3 +196,27 @@ def test_config_response_never_declares_a_url_or_path_field(spec):
     for name in ("ConfigResponse", "LabelInfo", "TierInfo"):
         declared |= set(schema(spec, name)["properties"])
     assert not {"url", "path", "secret", "secret_env", "price_in_per_m"} & declared
+
+
+def test_requests_endpoint_contract(spec):
+    operation = spec["paths"]["/requests"]["get"]
+    assert operation["operationId"] == "list_requests"
+    assert response_schema_ref(operation) == "RequestItem"
+    assert operation["responses"]["200"]["headers"]["X-Total-Count"]["schema"]["type"] == "integer"
+    params = {p["name"]: p["schema"] for p in operation["parameters"]}
+    assert set(params) == {
+        "action", "tier", "review_status", "delivery_status", "degraded", "q", "limit", "offset", "order",
+    }
+    assert params["order"]["enum"] == ["newest", "oldest"]
+    assert params["limit"]["maximum"] == 200 and params["limit"]["minimum"] == 1
+
+
+def test_request_item_fields(spec):
+    item = schema(spec, "RequestItem")
+    assert set(item["properties"]) == {
+        "id", "created_at", "text", "label", "confidence", "tier", "action", "cost_usd",
+        "latency_ms", "degraded", "review_status", "final_label", "resolved_at",
+        "delivery_status", "delivery_error", "delivered_at",
+    }
+    assert "error" not in item["properties"]
+    assert item["properties"]["action"]["enum"] == ["accepted", "human_review"]
