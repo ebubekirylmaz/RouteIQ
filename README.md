@@ -423,7 +423,7 @@ routeiq/
 pytest
 ```
 
-Tests cover the cascade decisions at threshold boundaries, the OpenRouter adapter (response parsing, retries), the API routes and their OpenAPI contract, the review queue, request history and statistics, delivery tracking, the integrations, the SQLite store with its schema migration and indexes, and config validation. LLM and network calls are mocked in tests.
+Tests cover the cascade decisions at threshold boundaries (and that the threshold simulation in `evaluate.py`, which produces the results table, makes the same decisions as the live cascade), the OpenRouter adapter (response parsing, retries), the API routes and their OpenAPI contract, the review queue, request history and statistics, delivery tracking, the integrations, the SQLite store with its schema migration and indexes, and config validation. LLM and network calls are mocked in tests.
 
 The dashboard has its own tests and type check (`cd dashboard && npm test && npm run typecheck`). They run in Vitest with a mocked API, so no server is needed.
 
@@ -456,7 +456,7 @@ The dashboard has its own tests and type check (`cd dashboard && npm test && npm
 - [x] FastAPI service and human-review queue
 - [x] Mock ERP integration
 - [x] Docker setup
-- [ ] Automated test that the threshold simulation in `evaluate.py` matches the live cascade
+- [x] Automated test that the threshold simulation in `evaluate.py` matches the live cascade
 - [ ] Example domains with synthetic data, labeled as synthetic (electric-vehicle after-sales, supplier communication, internal requests)
 - [ ] Jev adapter (if access is available)
 - [x] Dashboard (React + TypeScript): review queue, overview, charts, request history and a form to try a text
