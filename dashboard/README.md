@@ -38,7 +38,7 @@ The test tools are pinned to versions that work on Node 20 (`vitest` 4, `jsdom` 
 npm run build         # type-checks, then writes dist/
 ```
 
-The API serves `dist/` under `/dashboard/` when it exists (`ROUTEIQ_DASHBOARD_DIR` overrides the folder). The app is built for that base path, so the router uses `basename="/dashboard"`.
+The Docker image runs this build in a Node stage and ships `dist/`. Source maps are off, because they would be served with the app. The API serves `dist/` under `/dashboard/` when it exists (`ROUTEIQ_DASHBOARD_DIR` overrides the folder). The app is built for that base path, so the router uses `basename="/dashboard"`.
 
 ## When the API changes
 
@@ -53,10 +53,14 @@ cd dashboard && npm run api:types
 
 ```
 src/
-├── api/client.ts       fetch wrapper, ApiError, X-Total-Count, query strings
-├── api/endpoints.ts    one typed function per endpoint
-├── api/schema.d.ts     generated, not committed to be edited by hand
-├── queryClient.ts      retry and cache defaults
-├── components/         Layout
-└── pages/              ReviewQueue, Overview, Charts, History
+├── api/                client.ts (fetch wrapper, ApiError, X-Total-Count, query strings),
+│                       endpoints.ts (one typed function per endpoint), queryKeys.ts,
+│                       schema.d.ts (generated, do not edit by hand)
+├── hooks/              one TanStack Query hook per data need (useReviewQueue, useStats, ...)
+├── lib/                pure functions: formatting, paging, history URL parsing, chart data
+├── components/         Layout, Pager, Notice, the review, overview and history building blocks
+│   └── charts/         Recharts wrappers and the data table next to the charts
+├── pages/              ReviewQueue, Overview, Charts (lazy-loaded), History, NotFound
+├── test/               MSW server and one fake API per area
+└── queryClient.ts      retry and cache defaults
 ```

@@ -57,6 +57,7 @@ RouteIQ explores a simple idea: **use the cheapest model that is confident enoug
 - **Confidence-based cascade.** Two thresholds decide between accept, escalate and human review.
 - **Human-in-the-loop queue.** Low-confidence items are stored with the model's suggestion for a person to confirm or correct.
 - **Integration adapters.** Webhook, mock ERP (OData-style REST) and JSON Lines export out of the box. Delivery runs after the response, and its status is tracked per request.
+- **Dashboard.** A React UI served by the API under `/dashboard/`: a review queue for a person to confirm or correct the model's suggestion, an overview with cost, latency and delivery status, charts over time, and a searchable request history.
 - **Built-in evaluation.** Accuracy, macro-F1, cost per 1,000 requests, p50/p95 latency, calibration and escalation rate, all from one command.
 - **One worked example.** Ships with a bank-support scenario built on the public CLINC150 dataset. More example domains are planned (see [Roadmap](#roadmap)).
 
@@ -117,7 +118,7 @@ cp .env.example .env             # add OPENROUTER_API_KEY
 docker compose up --build
 ```
 
-The first build takes a few minutes: it installs the dependencies, downloads CLINC150, and trains the baseline inside the image. The API is then available at `http://localhost:8000`. It is published on localhost only, because it has no authentication. The API key is read from `.env` when the container starts and is not stored in the image. The SQLite database lives in the `routeiq-data` volume and survives restarts; `docker compose down -v` deletes it. The mock ERP keeps its tickets in memory, so they reset on restart.
+The first build takes a few minutes: it installs the dependencies, downloads CLINC150, and trains the baseline inside the image. The API is then available at `http://localhost:8000`. It is published on localhost only, because it has no authentication. The API key is read from `.env` when the container starts and is not stored in the image. The SQLite database lives in the `routeiq-data` volume and survives restarts; `docker compose down -v` deletes it. The mock ERP keeps its tickets in memory, so they reset on restart. The image also contains the built dashboard: open `http://localhost:8000/dashboard/`.
 
 ## API
 
@@ -163,6 +164,37 @@ Internal error text is never returned: each item only says whether it was `degra
 Every endpoint declares its response model, and the operation ids are the function names (`route_request`, `list_requests`, ...). The OpenAPI schema at `/openapi.json` can be fed to a code generator to get typed clients; tests pin the field names and types so a change to them is noticed.
 
 Every request is stored in a SQLite file (text, result, cost, latency, and the reviewer's decision). Settings are read from the environment: `ROUTEIQ_CONFIG` (default `configs/clinc150.yaml`) and `ROUTEIQ_DB` (default `routeiq.db` in the repository root). Interactive documentation is served at `/docs`.
+
+## Dashboard
+
+The dashboard is a single-page app in [`dashboard/`](dashboard/) (React, TypeScript, Vite). The API serves the built files under `/dashboard/`, and `/` redirects there. The Docker image builds it in a Node stage, so `docker compose up --build` is enough. Without Docker, build it once and start the API:
+
+```bash
+cd dashboard && npm install && npm run build && cd ..
+uvicorn routeiq.api:app
+```
+
+Open `http://localhost:8000/dashboard/`. Node 20.19 or later is needed to build. `ROUTEIQ_DASHBOARD_DIR` points the API at another folder of built files.
+
+| Screen | What it shows |
+|---|---|
+| Review queue | Requests waiting for a person, oldest first, with one button per label. The model's suggestion is marked but not preselected. The list refreshes every 10 seconds. If somebody else already decided a request, you get a notice instead of an overwritten decision |
+| Overview | Totals for the last 24 hours, 7 days or all time: requests, cost, p95 latency, requests where a tier failed, how requests ended, and the delivery status with a button to resend failed deliveries |
+| Charts | Requests (accepted or sent to a person), cumulative cost and average latency per hour or day, and a table of the same numbers below the charts |
+| History | Every request, newest first, with filters (outcome, review, delivery, tier, tier failure), text search and paging. Filters and page are kept in the address, so a view can be bookmarked. A row opens to show the full text and the delivery problem |
+
+Times are shown in UTC. The overview shows reviewer agreement next to a note that it is not the model's accuracy (see [Statistics](#statistics)).
+
+The dashboard has no login, like the API. Publish it on localhost only, or put both behind a gateway.
+
+For development, run the API and `npm run dev` in `dashboard/` (http://localhost:5173/dashboard/); the dev server forwards the API paths, so no CORS setup is needed. After an API change, regenerate the schema and the types:
+
+```bash
+python scripts/export_openapi.py
+cd dashboard && npm run api:types
+```
+
+A Python test fails when the committed `dashboard/openapi.json` is out of date. More in [`dashboard/README.md`](dashboard/README.md).
 
 ## Integrations
 
@@ -346,12 +378,14 @@ Key findings:
 ```
 routeiq/
 ├── configs/                 # YAML use-case definitions (one per domain)
+├── dashboard/               # React UI (see dashboard/README.md)
 ├── data/
 │   └── prepare_clinc.py     # builds the train, validation and test files
 ├── routeiq/
 │   ├── api.py               # FastAPI app and its endpoints
 │   ├── cascade.py           # threshold-based routing logic
 │   ├── config.py            # config loading and validation
+│   ├── dashboard.py         # serves the built UI under /dashboard/
 │   ├── delivery.py          # sends decisions to the target and tracks the status
 │   ├── evaluate.py          # metrics, calibration and threshold sweep
 │   ├── redact.py            # masks URLs in error messages before they are shown
@@ -362,6 +396,7 @@ routeiq/
 │   ├── views.py             # builds the public views (config, request items)
 │   ├── models/              # classifier adapters and registry
 │   └── integrations/        # JSONL export, webhook, mock ERP
+├── scripts/                 # export_openapi.py: writes the schema the UI types come from
 ├── tests/
 ├── Dockerfile
 ├── docker-compose.yml
@@ -377,6 +412,8 @@ pytest
 ```
 
 Tests cover the cascade decisions at threshold boundaries, the OpenRouter adapter (response parsing, retries), the API routes and their OpenAPI contract, the review queue, request history and statistics, delivery tracking, the integrations, the SQLite store with its schema migration and indexes, and config validation. LLM and network calls are mocked in tests.
+
+The dashboard has its own tests and type check (`cd dashboard && npm test && npm run typecheck`). They run in Vitest with a mocked API, so no server is needed.
 
 ## Limitations
 
@@ -396,6 +433,8 @@ Tests cover the cascade decisions at threshold boundaries, the OpenRouter adapte
 - Requests that reach the LLM wait for it. With the configured budget (10 s timeout, 2 attempts) a request can take about 21 s before it falls back to human review.
 - `POST /deliveries/retry` takes the oldest failed deliveries first, so a record that keeps failing can hold back newer ones when the limit is smaller than the backlog.
 - The mock ERP keeps its tickets in memory and the application is designed for a single process; neither is meant for production use.
+- The dashboard does not record who made a decision: a review is stored with the label and the time only, so there is no audit trail per person.
+- The history screen does not refresh by itself, because new requests would move the rows while somebody reads. It has a Refresh button; the review queue and the overview poll.
 
 ## Roadmap
 
@@ -409,7 +448,8 @@ Tests cover the cascade decisions at threshold boundaries, the OpenRouter adapte
 - [ ] Automated test that the threshold simulation in `evaluate.py` matches the live cascade
 - [ ] Example domains with synthetic data, labeled as synthetic (electric-vehicle after-sales, supplier communication, internal requests)
 - [ ] Jev adapter (if access is available)
-- [ ] Dashboard (React + TypeScript): live routing, cost and accuracy charts
+- [x] Dashboard (React + TypeScript): review queue, overview, charts and request history
+- [ ] Dashboard: a form to route a text and see the result, and accuracy charts (these need labeled ground truth, which production requests do not have)
 - [ ] Threshold auto-tuning from review feedback
 - [ ] Drift monitoring
 
