@@ -5,5 +5,7 @@
 export const queryKeys = {
   config: ["config"] as const,
   review: ["review"] as const,
+  stats: ["stats"] as const,
+  statsWindow: (window: string) => ["stats", window] as const,
   reviewPage: (limit: number, offset: number) => ["review", { limit, offset }] as const,
 };

@@ -4,11 +4,13 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { App } from "./App";
 import { serveReviewApi } from "./test/reviewServer";
+import { serveStatsApi } from "./test/statsServer";
 import { renderWithProviders } from "./test/utils";
 
-// The review queue screen loads its data, so the routes need a (here empty) API to talk to.
+// The screens load their data, so the routes need an API to talk to.
 beforeEach(() => {
   serveReviewApi([]);
+  serveStatsApi();
 });
 
 const heading = (name: string) => screen.getByRole("heading", { level: 1, name });

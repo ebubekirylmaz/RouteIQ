@@ -20,3 +20,40 @@ export function formatWaiting(iso: string, now: number = Date.now()): string {
   if (hours < 24) return `${hours} h`;
   return `${Math.floor(hours / 24)} d`;
 }
+
+/**
+ * Money in US dollars. Requests cost fractions of a cent, so a cent is not a useful unit:
+ * below a dollar four decimals are shown, and a tiny non-zero amount never reads as free.
+ */
+export function formatCost(usd: number | null | undefined): string {
+  if (usd === null || usd === undefined || Number.isNaN(usd)) return "n/a";
+  if (usd === 0) return "$0.00";
+  if (usd < 0.0001) return "<$0.0001";
+  if (usd < 1) return `$${usd.toFixed(4)}`;
+  return `$${usd.toFixed(2)}`;
+}
+
+/** What 1,000 requests cost at this rate. The README's results use the same unit. */
+export function formatCostPer1k(usd: number, requests: number): string {
+  if (requests <= 0) return "n/a";
+  return formatCost((usd / requests) * 1000);
+}
+
+/** A latency in milliseconds, in seconds from one second up. */
+export function formatLatency(ms: number | null | undefined): string {
+  if (ms === null || ms === undefined || Number.isNaN(ms)) return "n/a";
+  if (ms < 1) return "<1 ms";
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  return `${(ms / 1000).toFixed(1)} s`;
+}
+
+/** `part` of `whole` as a percentage with one decimal ("2.0%"), or "n/a" when there is no whole. */
+export function formatShare(part: number, whole: number): string {
+  if (whole <= 0) return "n/a";
+  return `${((part / whole) * 100).toFixed(1)}%`;
+}
+
+/** A count with thousands separators, so 12345 reads "12,345". */
+export function formatCount(value: number): string {
+  return value.toLocaleString("en-US");
+}

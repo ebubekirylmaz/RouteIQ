@@ -1,0 +1,43 @@
+.section {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.title {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.table td {
+  text-align: right;
+}
+
+.table thead th:not(:first-child) {
+  text-align: right;
+}
+
+.table tbody th {
+  font-weight: 400;
+}
+
+.empty {
+  margin: 0;
+  color: var(--muted);
+}
