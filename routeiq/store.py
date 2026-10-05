@@ -28,6 +28,13 @@ NEW_COLUMNS = {
     "delivery_updated_at": "TEXT",
 }
 
+INDEXES = {
+    "idx_requests_review_status": "review_status",
+    "idx_requests_delivery_status": "delivery_status",
+    "idx_requests_action": "action",
+    "idx_requests_tier": "tier",
+}
+
 def _now():
     return datetime.now(timezone.utc).isoformat()
 
@@ -120,6 +127,8 @@ class Store:
         for name, sql_type in NEW_COLUMNS.items():
             if name not in existing:
                 conn.execute(f"ALTER TABLE requests ADD COLUMN {name} {sql_type}")
+            for name, column in INDEXES.items():
+                conn.execute(f"CREATE INDEX IF NOT EXISTS {name} ON requests({column})")
 
     def mark_delivery(self, request_id, status, error=None):
         now = _now()

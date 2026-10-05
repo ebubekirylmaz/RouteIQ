@@ -393,3 +393,93 @@ def test_pending_count_drops_when_a_request_is_resolved(tmp_path):
 
 def test_pending_count_on_an_empty_database(tmp_path):
     assert Store(tmp_path / "a.db").pending_count() == 0
+
+
+# --- indexes ---------------------------------------------------------------------
+
+def index_names(path):
+    conn = sqlite3.connect(path)
+    try:
+        return {row[1] for row in conn.execute("PRAGMA index_list(requests)")}
+    finally:
+        conn.close()
+
+
+def test_new_database_has_the_filter_indexes(tmp_path):
+    from routeiq.store import INDEXES
+
+    path = tmp_path / "a.db"
+    Store(path)
+    assert set(INDEXES) <= index_names(path)
+
+
+def test_migration_adds_indexes_to_an_old_database(tmp_path):
+    from routeiq.store import INDEXES
+
+    path = tmp_path / "old.db"
+    conn = sqlite3.connect(path)
+    conn.execute(OLD_SCHEMA)
+    conn.execute(
+        "INSERT INTO requests (created_at, text, label, action) VALUES (?,?,?,?)",
+        ("2026-01-01T00:00:00", "old request", "a", "accepted"),
+    )
+    conn.commit()
+    conn.close()
+    assert not (set(INDEXES) & index_names(path))
+
+    store = Store(path)
+
+    assert set(INDEXES) <= index_names(path)
+    assert set(NEW_COLUMNS) <= column_names(path)
+    assert store.get(1)["text"] == "old request"
+
+
+def test_index_migration_can_run_repeatedly(tmp_path):
+    from routeiq.store import INDEXES
+
+    path = tmp_path / "a.db"
+    for _ in range(3):
+        Store(path)
+    names = index_names(path)
+    assert set(INDEXES) <= names
+
+
+def test_indexes_cover_exactly_existing_columns(tmp_path):
+    from routeiq.store import INDEXES
+
+    path = tmp_path / "a.db"
+    Store(path)
+    assert set(INDEXES.values()) <= column_names(path)
+
+
+def query_plan(path, sql, params=()):
+    conn = sqlite3.connect(path)
+    try:
+        return " ".join(str(row[3]) for row in conn.execute("EXPLAIN QUERY PLAN " + sql, params))
+    finally:
+        conn.close()
+
+
+@pytest.mark.parametrize("column, index", [
+    ("review_status", "idx_requests_review_status"),
+    ("delivery_status", "idx_requests_delivery_status"),
+    ("action", "idx_requests_action"),
+    ("tier", "idx_requests_tier"),
+])
+def test_filter_queries_use_the_index(tmp_path, column, index):
+    path = tmp_path / "a.db"
+    store = Store(path)
+    for i in range(50):
+        store.log(str(i), accepted())
+    plan = query_plan(path, f"SELECT * FROM requests WHERE {column} = ?", ("x",))
+    assert index in plan
+
+
+def test_the_review_queue_query_uses_its_index(tmp_path):
+    path = tmp_path / "a.db"
+    Store(path)
+    plan = query_plan(
+        path,
+        "SELECT id FROM requests WHERE review_status = 'pending' ORDER BY id LIMIT 50",
+    )
+    assert "idx_requests_review_status" in plan
