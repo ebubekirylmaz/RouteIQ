@@ -124,11 +124,14 @@ The first build takes a few minutes: it installs the dependencies, downloads CLI
 | Endpoint | Purpose |
 |---|---|
 | `GET /health` | Liveness check |
+| `GET /config` | The task, the labels with their descriptions, the tiers with their thresholds, and the type of the delivery target. Target URLs, file paths, secret names and prices are never returned |
 | `POST /route` | Body `{"text": "..."}` (1 to 5,000 characters). Runs the cascade and stores the request |
-| `GET /review?limit=50` | Requests waiting for a person, oldest first, with the model's suggestion |
+| `GET /requests` | Request history with filters, paging and a total count (see below) |
+| `GET /review?limit=50&offset=0` | Requests waiting for a person, oldest first, with the model's suggestion. The header `X-Total-Count` holds the number waiting |
 | `POST /review/{id}` | Body `{"label": "..."}`. Records the person's decision |
 | `POST /deliveries/retry?limit=100` | Resends deliveries that failed, or that have been pending for more than 5 minutes (for example after a restart), oldest first |
-| `GET /stats` | Totals: requests, accepted per tier, human-review and delivery counts, cost, average and p95 latency |
+| `GET /stats?since=...` | Totals for everything or for a window: requests, accepted per tier, human-review, delivery and reviewer-agreement counts, cost, average and p95 latency |
+| `GET /stats/timeseries` | The same kind of numbers per hour or per day, for charts (see below) |
 
 `action` is `accepted` or `human_review`. `tier` names the tier that produced the label (or the last suggestion). `degraded` is `true` when a tier failed and the cascade fell back to what it had; the error details are logged and stored, not returned.
 
@@ -140,6 +143,24 @@ curl -X POST http://localhost:8000/review/1 \
   -H "Content-Type: application/json" \
   -d '{"label": "out_of_scope"}'
 ```
+
+### Request history
+
+`GET /requests` filters by `action`, `tier`, `review_status`, `delivery_status`, `degraded` and `q` (a case-insensitive substring of the text; `%` and `_` are matched literally). `limit` (1 to 200, default 50) and `offset` page through the result, newest first unless `order=oldest`. The number of requests matching the filters, ignoring paging, is in the `X-Total-Count` header.
+
+Internal error text is never returned: each item only says whether it was `degraded`. A failed delivery shows its reason with any URL replaced by `<url>`, because such messages can contain the target's address and tokens.
+
+### Statistics
+
+`GET /stats?since=2026-10-05T00:00:00Z` limits every counter to requests created at or after that time. A time without a zone is read as UTC.
+
+`reviewer_agreement` is the share of human-reviewed requests where the reviewer kept the model's suggestion. It is not the model's accuracy: only the requests the model was unsure about are sent to a person, so the sample is biased towards hard cases. It is `null` until the first review is resolved.
+
+`GET /stats/timeseries?bucket=hour|day&since=...&until=...` returns one point per bucket with the request count (split into accepted and human review), cost and average latency. Buckets are aligned to the hour or day in UTC, so the first one starts at the beginning of the bucket that contains `since`. `since` is included and `until` is excluded. Buckets without requests are returned with zeros, so a chart gets a continuous axis. The defaults are the last 24 hours (hourly) and the last 30 days (daily); a range of more than 1,000 buckets is rejected with `422`.
+
+### Typed schema
+
+Every endpoint declares its response model, and the operation ids are the function names (`route_request`, `list_requests`, ...). The OpenAPI schema at `/openapi.json` can be fed to a code generator to get typed clients; tests pin the field names and types so a change to them is noticed.
 
 Every request is stored in a SQLite file (text, result, cost, latency, and the reviewer's decision). Settings are read from the environment: `ROUTEIQ_CONFIG` (default `configs/clinc150.yaml`) and `ROUTEIQ_DB` (default `routeiq.db` in the repository root). Interactive documentation is served at `/docs`.
 
@@ -328,13 +349,17 @@ routeiq/
 ├── data/
 │   └── prepare_clinc.py     # builds the train, validation and test files
 ├── routeiq/
-│   ├── api.py               # FastAPI app: /route, /review, /deliveries/retry, /stats
+│   ├── api.py               # FastAPI app and its endpoints
 │   ├── cascade.py           # threshold-based routing logic
 │   ├── config.py            # config loading and validation
 │   ├── delivery.py          # sends decisions to the target and tracks the status
 │   ├── evaluate.py          # metrics, calibration and threshold sweep
+│   ├── redact.py            # masks URLs in error messages before they are shown
+│   ├── schemas.py           # request and response models of the API
 │   ├── store.py             # SQLite store: requests, review queue, deliveries
+│   ├── timeutil.py          # UTC and time bucket helpers
 │   ├── train.py             # baseline training
+│   ├── views.py             # builds the public views (config, request items)
 │   ├── models/              # classifier adapters and registry
 │   └── integrations/        # JSONL export, webhook, mock ERP
 ├── tests/
@@ -351,7 +376,7 @@ routeiq/
 pytest
 ```
 
-Tests cover the cascade decisions at threshold boundaries, the OpenRouter adapter (response parsing, retries), the API routes, the review queue, delivery tracking, the integrations, the SQLite store with its schema migration, and config validation. LLM and network calls are mocked in tests.
+Tests cover the cascade decisions at threshold boundaries, the OpenRouter adapter (response parsing, retries), the API routes and their OpenAPI contract, the review queue, request history and statistics, delivery tracking, the integrations, the SQLite store with its schema migration and indexes, and config validation. LLM and network calls are mocked in tests.
 
 ## Limitations
 
@@ -364,7 +389,9 @@ Tests cover the cascade decisions at threshold boundaries, the OpenRouter adapte
 - CLINC150 queries are short, single-turn utterances. Real business emails are longer and messier.
 - Many `card_declined` examples are one template sentence with small variations, so this intent is easy to learn and can make results look better than they would on varied text.
 - The validation set has only 20 examples per intent, so one mistake moves a class's recall by 5 points. Small differences between classes may be noise.
-- The API has no authentication. Anyone who can reach `/review` or `/stats` can read the queued texts and resolve items. Put it behind a gateway or add authentication before exposing it.
+- The API has no authentication. Anyone who can reach `/review`, `/requests` or `/stats` can read the stored texts, and anyone who can reach `/review` can resolve items. Put it behind a gateway or add authentication before exposing it.
+- `GET /requests` pages with `offset`, so while a client pages through the newest-first list, new requests shift the pages and a row can show up twice or be skipped. The text search scans the table; it has no full-text index.
+- Reviewer agreement measures how often a person keeps the model's suggestion on requests the model was unsure about. It says little about accuracy on the requests the cascade accepted.
 - Request texts are stored unencrypted in a local SQLite file, with no retention limit or anonymization. A real deployment needs a retention policy and access control.
 - Requests that reach the LLM wait for it. With the configured budget (10 s timeout, 2 attempts) a request can take about 21 s before it falls back to human review.
 - `POST /deliveries/retry` takes the oldest failed deliveries first, so a record that keeps failing can hold back newer ones when the limit is smaller than the backlog.
