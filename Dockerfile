@@ -1,3 +1,14 @@
+# Stage 1: build the dashboard. Node is only needed here, so it does not end up in the image.
+FROM node:20-slim AS dashboard
+WORKDIR /dashboard
+# Install the packages first, so this layer is rebuilt only when the lockfile changes.
+COPY dashboard/package.json dashboard/package-lock.json ./
+RUN npm ci
+COPY dashboard/ ./
+# This also type-checks the code against the committed API schema.
+RUN npm run build
+
+# Stage 2: the API, with the built dashboard next to it.
 FROM python:3.13-slim
 
 ENV PYTHONUNBUFFERED=1 \
@@ -18,6 +29,11 @@ COPY data/prepare_clinc.py ./data/prepare_clinc.py
 # Build the benchmark data and train the baseline model into the image.
 # This downloads CLINC150 from Hugging Face, so the build needs network access.
 RUN python data/prepare_clinc.py && python -m routeiq.train --config configs/clinc150.yaml
+
+# The built dashboard. It comes after the training step on purpose: a change in the UI must not
+# repeat the download and the training.
+COPY --from=dashboard /dashboard/dist ./dashboard/dist
+ENV ROUTEIQ_DASHBOARD_DIR=/app/dashboard/dist
 
 # Run as a normal user. The database lives on a volume.
 RUN useradd --create-home app && mkdir /data && chown app /data

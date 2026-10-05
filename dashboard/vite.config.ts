@@ -29,7 +29,8 @@ export default defineConfig(({ mode }) => {
         API_PATHS.map((path) => [path, { target, changeOrigin: true }]),
       ),
     },
-    build: { outDir: "dist", sourcemap: true },
+    // No source maps: they are served with the app, and they are 2 MB that nobody needs there.
+    build: { outDir: "dist", sourcemap: false },
     test: {
       environment: "jsdom",
       setupFiles: ["./src/test/setup.ts"],
