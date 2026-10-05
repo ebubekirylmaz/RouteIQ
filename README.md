@@ -456,7 +456,6 @@ The dashboard has its own tests and type check (`cd dashboard && npm test && npm
 - [x] FastAPI service and human-review queue
 - [x] Mock ERP integration
 - [x] Docker setup
-- [ ] Prompt experiments on the validation split: label description wording and retrieved training examples, compared on a cheaper LLM
 - [ ] Automated test that the threshold simulation in `evaluate.py` matches the live cascade
 - [ ] Example domains with synthetic data, labeled as synthetic (electric-vehicle after-sales, supplier communication, internal requests)
 - [ ] Jev adapter (if access is available)
