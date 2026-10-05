@@ -1,10 +1,11 @@
 import os
 from contextlib import asynccontextmanager
 from dataclasses import asdict
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Response
-from datetime import datetime
+
 from routeiq.cascade import route
 from routeiq.config import ROOT, load_config
 from routeiq.delivery import deliver
@@ -14,9 +15,14 @@ from routeiq.models.registry import build_tiers
 from routeiq.schemas import (
     ConfigResponse, ErrorResponse, HealthResponse, RequestItem, ReviewDecision,
     ReviewItem, ReviewResolved, RetryResult, RouteRequest, RouteResponse, StatsResponse,
+    TimeseriesResponse,
 )
 from routeiq.store import Store
+from routeiq.timeutil import BUCKET_STEPS, as_utc, floor_to_bucket
 from routeiq.views import describe_config, request_item
+
+MAX_BUCKETS = 1000
+DEFAULT_WINDOWS = {"hour": timedelta(hours=24), "day": timedelta(days=30)}
 
 
 def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=None):
@@ -140,6 +146,23 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
     @app.get("/stats", response_model=StatsResponse)
     def stats(since: datetime | None = None):
         return app.state.store.stats(since)
+    
+    @app.get("/stats/timeseries", response_model=TimeseriesResponse)
+    def timeseries(
+        bucket: Literal["hour", "day"] = "hour",
+        since: datetime | None = None,
+        until: datetime | None = None,
+    ):
+        until = as_utc(until) if until else datetime.now(timezone.utc)
+        since = as_utc(since) if since else until - DEFAULT_WINDOWS[bucket]
+        if since >= until:
+            raise HTTPException(status_code=422, detail="since must be earlier than until")
+        if (until - floor_to_bucket(since, bucket)) / BUCKET_STEPS[bucket] > MAX_BUCKETS:
+            raise HTTPException(
+                status_code=422, detail=f"the range covers more than {MAX_BUCKETS} buckets"
+            )
+        points = app.state.store.timeseries(bucket, since, until)
+        return {"bucket": bucket, "since": since, "until": until, "points": points}
 
     return app
 

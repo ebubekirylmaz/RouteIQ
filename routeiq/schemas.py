@@ -126,3 +126,18 @@ class StatsResponse(BaseModel):
     cost_usd: float
     latency_ms: LatencyStats
     delivery: DeliveryCounts
+
+class TimeseriesPoint(BaseModel):
+    start: datetime
+    requests: int
+    accepted: int
+    human_review: int
+    cost_usd: float
+    avg_latency_ms: float
+
+
+class TimeseriesResponse(BaseModel):
+    bucket: Literal["hour", "day"]
+    since: datetime
+    until: datetime
+    points: list[TimeseriesPoint]

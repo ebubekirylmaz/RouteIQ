@@ -1,7 +1,8 @@
-from email.mime import text
 import sqlite3
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
+
+from routeiq.timeutil import BUCKET_STEPS, as_utc, floor_to_bucket
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS requests (
@@ -41,10 +42,10 @@ def _now():
 def _escape_like(text):
     return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
-def _cutoff(since):
-    if since.tzinfo is None:
-        since = since.replace(tzinfo=timezone.utc)
-    return since.astimezone(timezone.utc).isoformat()
+def _cutoff(moment):
+    return as_utc(moment).isoformat()
+
+
 class Store:
     FILTER_COLUMNS = ("action", "tier", "review_status", "delivery_status")
 
@@ -132,8 +133,8 @@ class Store:
         for name, sql_type in NEW_COLUMNS.items():
             if name not in existing:
                 conn.execute(f"ALTER TABLE requests ADD COLUMN {name} {sql_type}")
-            for name, column in INDEXES.items():
-                conn.execute(f"CREATE INDEX IF NOT EXISTS {name} ON requests({column})")
+        for name, column in INDEXES.items():
+            conn.execute(f"CREATE INDEX IF NOT EXISTS {name} ON requests({column})")
 
     def mark_delivery(self, request_id, status, error=None):
         now = _now()
@@ -159,6 +160,36 @@ class Store:
         with closing(self._connect()) as conn:
             rows = conn.execute(sql + " ORDER BY id LIMIT ?", [*params, limit]).fetchall()
         return [r["id"] for r in rows]
+    
+    def timeseries(self, bucket, since, until):
+        """Buckets from the start of the bucket containing `since` up to `until` (exclusive).
+
+        Buckets without requests are returned with zeros, so charts get a continuous axis.
+        """
+        length = 13 if bucket == "hour" else 10  # 'YYYY-MM-DDTHH' or 'YYYY-MM-DD'
+        step = BUCKET_STEPS[bucket]
+        start = floor_to_bucket(since, bucket)
+        end = as_utc(until)
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                f"SELECT substr(created_at, 1, {length}) AS b, COUNT(*),"
+                " COALESCE(SUM(action = 'accepted'), 0), COALESCE(SUM(action = 'human_review'), 0),"
+                " COALESCE(SUM(cost_usd), 0), COALESCE(AVG(latency_ms), 0)"
+                " FROM requests WHERE created_at >= ? AND created_at < ?"
+                " GROUP BY b ORDER BY b",
+                (_cutoff(start), _cutoff(end)),
+            ).fetchall()
+        found = {row[0]: row[1:] for row in rows}
+
+        points = []
+        moment = start
+        while moment < end:
+            key = moment.isoformat()[:length]
+            count, accepted, review, cost, latency = found.get(key, (0, 0, 0, 0.0, 0.0))
+            points.append({"start": moment, "requests": count, "accepted": accepted,
+                           "human_review": review, "cost_usd": cost, "avg_latency_ms": latency})
+            moment += step
+        return points
     
     def stats(self, since=None):
         window = "created_at >= ?"

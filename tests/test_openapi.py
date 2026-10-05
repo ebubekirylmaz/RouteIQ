@@ -244,3 +244,21 @@ def test_stats_accepts_an_optional_since_window(spec):
     assert params["since"]["required"] is False
     formats = {option.get("format") for option in params["since"]["schema"]["anyOf"]}
     assert "date-time" in formats
+
+
+def test_timeseries_endpoint_contract(spec):
+    operation = spec["paths"]["/stats/timeseries"]["get"]
+    assert operation["operationId"] == "timeseries"
+    assert response_schema_ref(operation) == "TimeseriesResponse"
+    params = {p["name"]: p["schema"] for p in operation["parameters"]}
+    assert set(params) == {"bucket", "since", "until"}
+    assert params["bucket"]["enum"] == ["hour", "day"]
+
+
+def test_timeseries_schemas(spec):
+    assert set(schema(spec, "TimeseriesResponse")["properties"]) == {"bucket", "since", "until", "points"}
+    point = schema(spec, "TimeseriesPoint")
+    assert set(point["properties"]) == {
+        "start", "requests", "accepted", "human_review", "cost_usd", "avg_latency_ms",
+    }
+    assert point["properties"]["start"]["format"] == "date-time"
