@@ -12,3 +12,5 @@ tests
 models
 data/*.csv
 data/*.jsonl
+dashboard/node_modules/
+dashboard/dist/

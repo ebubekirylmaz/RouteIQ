@@ -3,9 +3,11 @@ from contextlib import asynccontextmanager
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from typing import Literal
-
+from pathlib import Path
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Response
 
+from fastapi.responses import RedirectResponse
+from routeiq.dashboard import SPAFiles, dashboard_dir, is_built
 from routeiq.cascade import route
 from routeiq.config import ROOT, load_config
 from routeiq.delivery import deliver
@@ -25,7 +27,7 @@ MAX_BUCKETS = 1000
 DEFAULT_WINDOWS = {"hour": timedelta(hours=24), "day": timedelta(days=30)}
 
 
-def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=None):
+def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=None, dashboard=None):
     config = None
     if tiers is None:
         config = load_config(os.getenv("ROUTEIQ_CONFIG", str(ROOT / "configs" / "clinc150.yaml")))
@@ -55,6 +57,14 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
     if mock_erp:
         app.state.erp = mock_erp_module.MockErpStore()
         app.include_router(mock_erp_module.router)
+    directory = Path(dashboard) if dashboard is not None else dashboard_dir()
+    if is_built(directory):
+        app.mount("/dashboard", SPAFiles(directory=directory, html=True), name="dashboard")
+
+        @app.get("/", include_in_schema=False)
+        def home():
+            return RedirectResponse("/dashboard/")
+
 
     @app.get("/health", response_model=HealthResponse)
     def health():

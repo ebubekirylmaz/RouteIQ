@@ -9,3 +9,5 @@ data/*.csv
 data/*.jsonl
 reports/
 scratch/
+dashboard/node_modules/
+dashboard/dist/
