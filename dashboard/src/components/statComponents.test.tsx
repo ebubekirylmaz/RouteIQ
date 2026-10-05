@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import { STATS_WINDOWS } from "../lib/windows";
 import { statsFixture } from "../test/statsServer";
 import { DeliveryCard } from "./DeliveryCard";
 import { OutcomeTable } from "./OutcomeTable";
@@ -39,7 +40,7 @@ describe("StatCard", () => {
 
 describe("WindowSelect", () => {
   it("offers the three windows as one group of radio buttons", () => {
-    render(<WindowSelect value="24h" onChange={() => {}} />);
+    render(<WindowSelect options={STATS_WINDOWS} value="24h" onChange={() => {}} />);
     expect(screen.getByRole("group", { name: "Time window" })).toBeInTheDocument();
     expect(screen.getAllByRole("radio")).toHaveLength(3);
     for (const name of ["Last 24 hours", "Last 7 days", "All time"]) {
@@ -48,28 +49,28 @@ describe("WindowSelect", () => {
   });
 
   it("marks the current window", () => {
-    render(<WindowSelect value="7d" onChange={() => {}} />);
+    render(<WindowSelect options={STATS_WINDOWS} value="7d" onChange={() => {}} />);
     expect(screen.getByRole("radio", { name: "Last 7 days" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "Last 24 hours" })).not.toBeChecked();
   });
 
   it("reports the window that was chosen", async () => {
     const onChange = vi.fn();
-    render(<WindowSelect value="24h" onChange={onChange} />);
+    render(<WindowSelect options={STATS_WINDOWS} value="24h" onChange={onChange} />);
     await userEvent.click(screen.getByRole("radio", { name: "All time" }));
     expect(onChange).toHaveBeenCalledExactlyOnceWith("all");
   });
 
   it("does not report a click on the window that is already chosen", async () => {
     const onChange = vi.fn();
-    render(<WindowSelect value="24h" onChange={onChange} />);
+    render(<WindowSelect options={STATS_WINDOWS} value="24h" onChange={onChange} />);
     await userEvent.click(screen.getByRole("radio", { name: "Last 24 hours" }));
     expect(onChange).not.toHaveBeenCalled();
   });
 
   it("moves with the arrow keys", async () => {
     const onChange = vi.fn();
-    render(<WindowSelect value="24h" onChange={onChange} />);
+    render(<WindowSelect options={STATS_WINDOWS} value="24h" onChange={onChange} />);
     screen.getByRole("radio", { name: "Last 24 hours" }).focus();
     await userEvent.keyboard("{ArrowRight}");
     expect(onChange).toHaveBeenCalledWith("7d");

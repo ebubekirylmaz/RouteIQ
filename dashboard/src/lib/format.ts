@@ -57,3 +57,8 @@ export function formatShare(part: number, whole: number): string {
 export function formatCount(value: number): string {
   return value.toLocaleString("en-US");
 }
+
+/** A latency on an axis: the origin reads "0", not "<1 ms". */
+export function formatLatencyTick(ms: number): string {
+  return ms === 0 ? "0" : formatLatency(ms);
+}

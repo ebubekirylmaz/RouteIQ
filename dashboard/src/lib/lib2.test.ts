@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ApiError } from "../api/client";
 import spec from "../../openapi.json";
 import { REVIEWER_AGREEMENT_CAVEAT, REVIEWER_AGREEMENT_HELP } from "./copy";
-import { formatCost, formatCostPer1k, formatCount, formatLatency, formatShare } from "./format";
+import { formatCost, formatCostPer1k, formatCount, formatLatency, formatLatencyTick, formatShare } from "./format";
 import { describeRetryError, describeRetryResult } from "./retry";
 import { STATS_WINDOWS, sinceFor } from "./windows";
 
@@ -149,5 +149,17 @@ describe("reviewer agreement wording", () => {
   it("says plainly that it is not accuracy, next to the number", () => {
     expect(REVIEWER_AGREEMENT_CAVEAT).toMatch(/not the model's accuracy/i);
     expect(REVIEWER_AGREEMENT_HELP).toMatch(/NOT the model's overall accuracy/);
+  });
+});
+
+describe("formatLatencyTick", () => {
+  it("reads the origin of the axis as 0", () => {
+    expect(formatLatencyTick(0)).toBe("0");
+  });
+
+  it("reads everything else like a latency", () => {
+    expect(formatLatencyTick(250)).toBe("250 ms");
+    expect(formatLatencyTick(1000)).toBe("1.0 s");
+    expect(formatLatencyTick(0.5)).toBe("<1 ms");
   });
 });

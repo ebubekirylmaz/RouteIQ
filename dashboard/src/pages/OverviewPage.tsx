@@ -18,7 +18,7 @@ import {
   formatShare,
 } from "../lib/format";
 import { describeRetryError, describeRetryResult } from "../lib/retry";
-import type { StatsWindow } from "../lib/windows";
+import { STATS_WINDOWS, type StatsWindow } from "../lib/windows";
 import styles from "./OverviewPage.module.css";
 
 type Message = { kind: NoticeKind; text: string };
@@ -43,7 +43,7 @@ export function OverviewPage() {
     <section>
       <header className={styles.header}>
         <h1>Overview</h1>
-        <WindowSelect value={window} onChange={setWindow} />
+        <WindowSelect value={window} options={STATS_WINDOWS} onChange={setWindow} />
       </header>
 
       <div role="status" aria-label="Notifications" className={styles.notices}>

@@ -5,12 +5,14 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "./App";
 import { serveReviewApi } from "./test/reviewServer";
 import { serveStatsApi } from "./test/statsServer";
+import { serveTimeseriesApi } from "./test/timeseriesServer";
 import { renderWithProviders } from "./test/utils";
 
 // The screens load their data, so the routes need an API to talk to.
 beforeEach(() => {
   serveReviewApi([]);
   serveStatsApi();
+  serveTimeseriesApi();
 });
 
 const heading = (name: string) => screen.getByRole("heading", { level: 1, name });
@@ -26,9 +28,9 @@ describe("routing", () => {
     ["/overview", "Overview"],
     ["/charts", "Charts"],
     ["/history", "History"],
-  ])("shows %s", (route, title) => {
+  ])("shows %s", async (route, title) => {
     renderWithProviders(<App />, { route });
-    expect(heading(title)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: title })).toBeInTheDocument();
   });
 
   it("shows a not-found page with a way back", async () => {
@@ -52,7 +54,7 @@ describe("navigation", () => {
   it("moves between screens without a reload", async () => {
     renderWithProviders(<App />, { route: "/review" });
     await userEvent.click(screen.getByRole("link", { name: "Charts" }));
-    expect(heading("Charts")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Charts" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("link", { name: "History" }));
     expect(heading("History")).toBeInTheDocument();
   });

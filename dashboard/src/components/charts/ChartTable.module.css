@@ -1,0 +1,51 @@
+.details {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.scroll {
+  max-height: 24rem;
+  margin-top: 0.75rem;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.caption {
+  margin-bottom: 0.4rem;
+  color: var(--muted);
+  text-align: left;
+}
+
+.table th,
+.table td {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table th:first-child {
+  text-align: left;
+  font-weight: 400;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  font-weight: 600;
+}

@@ -7,5 +7,6 @@ export const queryKeys = {
   review: ["review"] as const,
   stats: ["stats"] as const,
   statsWindow: (window: string) => ["stats", window] as const,
+  timeseries: (range: string) => ["timeseries", range] as const,
   reviewPage: (limit: number, offset: number) => ["review", { limit, offset }] as const,
 };

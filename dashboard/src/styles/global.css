@@ -9,6 +9,7 @@
   --accent-soft: #e6edff;
   --danger: #b3261e;
   --ok: #1b7f3b;
+  --chart-warm: #c2570c;
   color-scheme: light dark;
 }
 
@@ -24,6 +25,7 @@
     --accent-soft: #1d2a4d;
     --danger: #ff8a80;
     --ok: #6fdc8c;
+    --chart-warm: #ffa75c;
   }
 }
 
