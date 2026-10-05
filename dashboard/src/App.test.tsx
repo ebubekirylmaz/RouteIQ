@@ -30,6 +30,7 @@ describe("routing", () => {
     ["/overview", "Overview"],
     ["/charts", "Charts"],
     ["/history", "History"],
+    ["/try", "Try it"],
   ])("shows %s", async (route, title) => {
     renderWithProviders(<App />, { route });
     expect(await screen.findByRole("heading", { level: 1, name: title })).toBeInTheDocument();
@@ -48,7 +49,7 @@ describe("navigation", () => {
     renderWithProviders(<App />, { route: "/review" });
     const nav = screen.getByRole("navigation", { name: "Main" });
     expect(nav).toHaveTextContent("Review queue");
-    for (const name of ["Review queue", "Overview", "Charts", "History"]) {
+    for (const name of ["Review queue", "Overview", "Charts", "History", "Try it"]) {
       expect(screen.getByRole("link", { name })).toBeInTheDocument();
     }
   });

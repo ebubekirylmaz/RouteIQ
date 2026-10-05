@@ -5,6 +5,7 @@ export type ReviewItem = Schemas["ReviewItem"];
 export type RequestItem = Schemas["RequestItem"];
 export type Stats = Schemas["StatsResponse"];
 export type Timeseries = Schemas["TimeseriesResponse"];
+export type RouteResult = Schemas["RouteResponse"];
 export type RetryResult = Schemas["RetryResult"];
 export type ReviewResolved = Schemas["ReviewResolved"];
 
@@ -64,3 +65,11 @@ export const getTimeseries = (params: TimeseriesParams = {}, signal?: AbortSigna
 /** Resends failed deliveries and ones stuck in pending. */
 export const retryDeliveries = (limit = 100) =>
   apiPost<RetryResult>(`/deliveries/retry${queryString({ limit })}`).then((result) => result.data);
+
+/**
+ * Sends one text through the cascade, as the systems that use RouteIQ do. The request is stored
+ * like any other (history, statistics, review queue) and may call the paid model. Rejects with
+ * ApiError: 422 when the text is empty or longer than 5,000 characters.
+ */
+export const routeText = (text: string) =>
+  apiPost<RouteResult>("/route", { text }).then((result) => result.data);

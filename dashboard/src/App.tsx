@@ -6,6 +6,7 @@ import { HistoryPage } from "./pages/HistoryPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { OverviewPage } from "./pages/OverviewPage";
 import { ReviewQueuePage } from "./pages/ReviewQueuePage";
+import { TryItPage } from "./pages/TryItPage";
 
 // The charts bring the chart library, which is most of the weight of the app. It loads only
 // when somebody opens the screen, so the review queue stays quick to open.
@@ -33,6 +34,7 @@ export function App() {
           }
         />
         <Route path="history" element={<HistoryPage />} />
+        <Route path="try" element={<TryItPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

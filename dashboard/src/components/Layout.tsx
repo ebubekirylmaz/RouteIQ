@@ -7,6 +7,7 @@ const NAV = [
   { to: "overview", label: "Overview" },
   { to: "charts", label: "Charts" },
   { to: "history", label: "History" },
+  { to: "try", label: "Try it" },
 ];
 
 export function Layout() {

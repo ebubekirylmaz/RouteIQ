@@ -7,6 +7,7 @@ export const queryKeys = {
   review: ["review"] as const,
   stats: ["stats"] as const,
   statsWindow: (window: string) => ["stats", window] as const,
+  timeseriesAll: ["timeseries"] as const,
   timeseries: (range: string) => ["timeseries", range] as const,
   requests: ["requests"] as const,
   requestsPage: (request: object) => ["requests", request] as const,
