@@ -4,7 +4,7 @@ from dataclasses import asdict
 from typing import Literal
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Response
-
+from datetime import datetime
 from routeiq.cascade import route
 from routeiq.config import ROOT, load_config
 from routeiq.delivery import deliver
@@ -138,8 +138,8 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
         return {"retried": len(ids), "sent": statuses.count("sent"), "failed": statuses.count("failed")}
 
     @app.get("/stats", response_model=StatsResponse)
-    def stats():
-        return app.state.store.stats()
+    def stats(since: datetime | None = None):
+        return app.state.store.stats(since)
 
     return app
 

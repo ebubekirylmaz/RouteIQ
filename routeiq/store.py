@@ -40,6 +40,11 @@ def _now():
 
 def _escape_like(text):
     return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+def _cutoff(since):
+    if since.tzinfo is None:
+        since = since.replace(tzinfo=timezone.utc)
+    return since.astimezone(timezone.utc).isoformat()
 class Store:
     FILTER_COLUMNS = ("action", "tier", "review_status", "delivery_status")
 
@@ -140,40 +145,59 @@ class Store:
                 (status, error, delivered_at, now, request_id),
             )
 
-    def retryable_deliveries(self, limit=100, stale_seconds=300):
+    def retryable_deliveries(self, limit=100, stale_seconds=300, since=None):
         cutoff = (datetime.now(timezone.utc) - timedelta(seconds=stale_seconds)).isoformat()
+        sql = (
+            "SELECT id FROM requests WHERE (delivery_status = 'failed'"
+            " OR (delivery_status = 'pending'"
+            "     AND (delivery_updated_at IS NULL OR delivery_updated_at < ?)))"
+        )
+        params = [cutoff]
+        if since is not None:
+            sql += " AND created_at >= ?"
+            params.append(_cutoff(since))
         with closing(self._connect()) as conn:
-            rows = conn.execute(
-                "SELECT id FROM requests WHERE delivery_status = 'failed'"
-                " OR (delivery_status = 'pending'"
-                "     AND (delivery_updated_at IS NULL OR delivery_updated_at < ?))"
-                " ORDER BY id LIMIT ?",
-                (cutoff, limit),
-            ).fetchall()
+            rows = conn.execute(sql + " ORDER BY id LIMIT ?", [*params, limit]).fetchall()
         return [r["id"] for r in rows]
     
-    def stats(self):
+    def stats(self, since=None):
+        window = "created_at >= ?"
+        params = [_cutoff(since)] if since is not None else []
+
+        def where(*conditions):
+            parts = ([window] if since is not None else []) + list(conditions)
+            return (" WHERE " + " AND ".join(parts)) if parts else ""
+
+        agreed_where = where("review_status = 'resolved'", "label = final_label")
         with closing(self._connect()) as conn:
             total, cost, avg_latency = conn.execute(
                 "SELECT COUNT(*), COALESCE(SUM(cost_usd), 0), COALESCE(AVG(latency_ms), 0)"
-                " FROM requests"
+                f" FROM requests{where()}", params,
             ).fetchone()
-            by_tier = self._counts(conn, "tier", "action = 'accepted'")
-            actions = self._counts(conn, "action")
-            review = self._counts(conn, "review_status", "review_status IS NOT NULL")
-            delivery = self._counts(conn, "delivery_status", "delivery_status IS NOT NULL")
+            by_tier = self._counts(conn, "tier", where("action = 'accepted'"), params)
+            actions = self._counts(conn, "action", where(), params)
+            review = self._counts(conn, "review_status", where("review_status IS NOT NULL"), params)
+            delivery = self._counts(conn, "delivery_status", where("delivery_status IS NOT NULL"), params)
             degraded = conn.execute(
-                "SELECT COUNT(*) FROM requests WHERE error IS NOT NULL"
+                f"SELECT COUNT(*) FROM requests{where('error IS NOT NULL')}", params
             ).fetchone()[0]
+            agreed = conn.execute(f"SELECT COUNT(*) FROM requests{agreed_where}", params).fetchone()[0]
             latencies = [r[0] for r in conn.execute(
-                "SELECT latency_ms FROM requests WHERE latency_ms IS NOT NULL ORDER BY latency_ms"
+                f"SELECT latency_ms FROM requests{where('latency_ms IS NOT NULL')} ORDER BY latency_ms",
+                params,
             )]
         p95 = latencies[min(len(latencies) - 1, int(len(latencies) * 0.95))] if latencies else 0.0
+        resolved = review.get("resolved", 0)
         return {
             "requests": total,
             "accepted_by_tier": by_tier,
             "human_review": actions.get("human_review", 0),
-            "review": {"pending": review.get("pending", 0), "resolved": review.get("resolved", 0)},
+            "review": {"pending": review.get("pending", 0), "resolved": resolved},
+            "reviewer_agreement": {
+                "resolved": resolved,
+                "agreed": agreed,
+                "rate": (agreed / resolved) if resolved else None,
+            },
             "degraded": degraded,
             "cost_usd": cost,
             "latency_ms": {"avg": avg_latency, "p95": p95},
@@ -181,13 +205,13 @@ class Store:
                 "pending": delivery.get("pending", 0),
                 "sent": delivery.get("sent", 0),
                 "failed": delivery.get("failed", 0),
-                "retryable": len(self.retryable_deliveries(limit=1_000_000)),
+                "retryable": len(self.retryable_deliveries(limit=1_000_000, since=since)),
             },
         }
 
     @staticmethod
-    def _counts(conn, column, where="1 = 1"):
+    def _counts(conn, column, where_clause, params):
         rows = conn.execute(
-            f"SELECT {column}, COUNT(*) FROM requests WHERE {where} GROUP BY {column}"
+            f"SELECT {column}, COUNT(*) FROM requests{where_clause} GROUP BY {column}", params
         ).fetchall()
         return {row[0]: row[1] for row in rows}

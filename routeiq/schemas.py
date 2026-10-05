@@ -37,6 +37,17 @@ class RequestItem(BaseModel):
     delivery_error: str | None
     delivered_at: datetime | None
 
+class ReviewerAgreement(BaseModel):
+    resolved: int
+    agreed: int
+    rate: float | None = Field(
+        description=(
+            "Share of human-reviewed requests where the reviewer kept the model's suggestion. "
+            "Only requests the model was unsure about are reviewed, so this is NOT the model's "
+            "overall accuracy."
+        )
+    )
+
 class LabelInfo(BaseModel):
     name: str
     description: str | None
@@ -109,6 +120,7 @@ class StatsResponse(BaseModel):
     requests: int
     accepted_by_tier: dict[str, int]
     human_review: int
+    reviewer_agreement: ReviewerAgreement
     review: ReviewCounts
     degraded: int
     cost_usd: float

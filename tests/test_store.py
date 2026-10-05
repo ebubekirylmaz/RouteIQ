@@ -483,3 +483,143 @@ def test_the_review_queue_query_uses_its_index(tmp_path):
         "SELECT id FROM requests WHERE review_status = 'pending' ORDER BY id LIMIT 50",
     )
     assert "idx_requests_review_status" in plan
+
+
+# --- stats window and reviewer agreement -------------------------------------------
+
+from datetime import datetime, timedelta, timezone  # noqa: E402
+
+
+def iso(moment):
+    return moment.astimezone(timezone.utc).isoformat()
+
+
+def age(path, request_id, moment):
+    set_raw(path, request_id, created_at=iso(moment))
+
+
+NOW = datetime(2026, 10, 5, 12, 0, tzinfo=timezone.utc)
+
+
+def test_reviewer_agreement_on_an_empty_database(tmp_path):
+    assert Store(tmp_path / "a.db").stats()["reviewer_agreement"] == {
+        "resolved": 0, "agreed": 0, "rate": None,
+    }
+
+
+def test_reviewer_agreement_counts_only_resolved_reviews(tmp_path):
+    store = Store(tmp_path / "a.db")
+    agree = store.log("1", needs_review("b"))
+    disagree = store.log("2", needs_review("b"))
+    store.log("3", needs_review("b"))  # still pending
+    store.log("4", accepted("b"))  # never reviewed
+    store.resolve(agree, "b")
+    store.resolve(disagree, "a")
+    assert store.stats()["reviewer_agreement"] == {"resolved": 2, "agreed": 1, "rate": 0.5}
+
+
+def test_a_review_without_a_model_suggestion_never_counts_as_agreement(tmp_path):
+    store = Store(tmp_path / "a.db")
+    rid = store.log("x", RouteResult(None, 0.0, None, "human_review", 0.0, 1.0, error="all failed"))
+    store.resolve(rid, "a")
+    assert store.stats()["reviewer_agreement"] == {"resolved": 1, "agreed": 0, "rate": 0.0}
+
+
+def test_full_agreement_and_full_disagreement(tmp_path):
+    store = Store(tmp_path / "a.db")
+    for i in range(3):
+        store.resolve(store.log(str(i), needs_review("b")), "b")
+    assert store.stats()["reviewer_agreement"]["rate"] == 1.0
+
+
+def build_history(tmp_path):
+    """İki eski istek (3 gün önce) ve üç yeni istek (1 saat önce)."""
+    path = tmp_path / "a.db"
+    store = Store(path)
+    old_accepted = store.log("old fine", RouteResult("a", 0.9, "baseline", "accepted", 0.5, 100.0))
+    old_review = store.log("old unsure", needs_review("b"))
+    store.resolve(old_review, "a")
+    new_accepted = store.log("new fine", RouteResult("a", 0.9, "baseline", "accepted", 0.25, 10.0))
+    new_review = store.log("new unsure", needs_review("b"))
+    store.resolve(new_review, "b")
+    new_failed = store.log("new broken", RouteResult("a", 0.9, "baseline", "accepted", 0.0, 20.0))
+    store.mark_delivery(old_accepted, "failed", "x")
+    store.mark_delivery(new_failed, "failed", "y")
+    store.mark_delivery(new_accepted, "sent")
+    for rid in (old_accepted, old_review):
+        age(path, rid, NOW - timedelta(days=3))
+    for rid in (new_accepted, new_review, new_failed):
+        age(path, rid, NOW - timedelta(hours=1))
+    return store
+
+
+def test_stats_without_a_window_counts_everything(tmp_path):
+    stats = build_history(tmp_path).stats()
+    assert stats["requests"] == 5
+    assert stats["review"] == {"pending": 0, "resolved": 2}
+    assert stats["delivery"]["failed"] == 2
+    assert stats["delivery"]["retryable"] == 2
+
+
+def test_stats_window_limits_every_counter(tmp_path):
+    stats = build_history(tmp_path).stats(since=NOW - timedelta(days=1))
+    assert stats["requests"] == 3
+    assert stats["accepted_by_tier"] == {"baseline": 2}
+    assert stats["human_review"] == 1
+    assert stats["review"] == {"pending": 0, "resolved": 1}
+    assert stats["reviewer_agreement"] == {"resolved": 1, "agreed": 1, "rate": 1.0}
+    assert stats["cost_usd"] == pytest.approx(0.251)
+    assert stats["latency_ms"]["avg"] == pytest.approx((10.0 + 500.0 + 20.0) / 3)
+    assert stats["latency_ms"]["p95"] == 500.0
+    assert stats["delivery"] == {"pending": 0, "sent": 1, "failed": 1, "retryable": 1}
+
+
+def test_stats_window_starting_in_the_future_is_empty(tmp_path):
+    stats = build_history(tmp_path).stats(since=NOW + timedelta(days=1))
+    assert stats["requests"] == 0
+    assert stats["reviewer_agreement"] == {"resolved": 0, "agreed": 0, "rate": None}
+    assert stats["delivery"]["retryable"] == 0
+
+
+def test_window_start_is_inclusive(tmp_path):
+    store = build_history(tmp_path)
+    boundary = NOW - timedelta(hours=1)
+    assert store.stats(since=boundary)["requests"] == 3
+    assert store.stats(since=boundary + timedelta(seconds=1))["requests"] == 0
+
+
+def test_a_naive_since_is_treated_as_utc(tmp_path):
+    store = build_history(tmp_path)
+    naive = (NOW - timedelta(days=1)).replace(tzinfo=None)
+    aware = NOW - timedelta(days=1)
+    assert store.stats(since=naive) == store.stats(since=aware)
+
+
+def test_since_in_another_timezone_is_converted(tmp_path):
+    store = build_history(tmp_path)
+    plus_three = timezone(timedelta(hours=3))
+    # new requests are at 11:00 UTC. 13:30+03:00 is 10:30 UTC (includes them),
+    # 15:00+03:00 is 12:00 UTC (excludes them).
+    assert store.stats(since=datetime(2026, 10, 5, 13, 30, tzinfo=plus_three))["requests"] == 3
+    assert store.stats(since=datetime(2026, 10, 5, 15, 0, tzinfo=plus_three))["requests"] == 0
+
+
+def test_retryable_deliveries_respects_the_window(tmp_path):
+    store = build_history(tmp_path)
+    assert len(store.retryable_deliveries()) == 2
+    recent = store.retryable_deliveries(since=NOW - timedelta(days=1))
+    assert len(recent) == 1
+    assert store.get(recent[0])["text"] == "new broken"
+
+
+def test_window_and_stale_pending_rule_combine_with_the_right_precedence(tmp_path):
+    path = tmp_path / "a.db"
+    store = Store(path)
+    old = store.log("old", accepted())
+    new = store.log("new", accepted())
+    store.mark_delivery(old, "failed", "x")
+    store.mark_delivery(new, "sent")
+    age(path, old, NOW - timedelta(days=5))
+    age(path, new, NOW - timedelta(hours=1))
+    # a 'sent' request inside the window must not be picked up because of the OR
+    assert store.retryable_deliveries(since=NOW - timedelta(days=1)) == []

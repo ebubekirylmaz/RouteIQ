@@ -120,8 +120,8 @@ def test_review_item_fields_and_timestamp_format(spec):
 def test_stats_fields(spec):
     stats = schema(spec, "StatsResponse")
     assert set(stats["properties"]) == {
-        "requests", "accepted_by_tier", "human_review", "review", "degraded",
-        "cost_usd", "latency_ms", "delivery",
+        "requests", "accepted_by_tier", "human_review", "review", "reviewer_agreement",
+        "degraded", "cost_usd", "latency_ms", "delivery",
     }
     assert set(schema(spec, "DeliveryCounts")["properties"]) == {
         "pending", "sent", "failed", "retryable",
@@ -228,3 +228,19 @@ def test_review_endpoint_supports_offset_and_declares_the_total_header(spec):
     assert set(params) == {"limit", "offset"}
     assert params["offset"]["minimum"] == 0
     assert operation["responses"]["200"]["headers"]["X-Total-Count"]["schema"]["type"] == "integer"
+
+
+def test_reviewer_agreement_is_documented_as_not_being_accuracy(spec):
+    agreement = schema(spec, "ReviewerAgreement")
+    assert set(agreement["properties"]) == {"resolved", "agreed", "rate"}
+    description = agreement["properties"]["rate"]["description"]
+    assert "NOT the model's overall accuracy" in description
+    assert {option.get("type") for option in agreement["properties"]["rate"]["anyOf"]} == {"number", "null"}
+
+
+def test_stats_accepts_an_optional_since_window(spec):
+    params = {p["name"]: p for p in spec["paths"]["/stats"]["get"]["parameters"]}
+    assert set(params) == {"since"}
+    assert params["since"]["required"] is False
+    formats = {option.get("format") for option in params["since"]["schema"]["anyOf"]}
+    assert "date-time" in formats

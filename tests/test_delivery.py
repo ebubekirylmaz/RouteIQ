@@ -285,3 +285,29 @@ def test_stats_on_an_empty_database(tmp_path):
         stats = client.get("/stats").json()
         assert stats["requests"] == 0
         assert stats["delivery"]["retryable"] == 0
+
+
+# --- /stats window and reviewer agreement through the API ----------------------------
+
+def test_stats_exposes_reviewer_agreement_after_a_review(tmp_path):
+    with unsure_client(tmp_path, None) as client:
+        agree = client.post("/route", json={"text": "one"}).json()["request_id"]
+        disagree = client.post("/route", json={"text": "two"}).json()["request_id"]
+        client.post(f"/review/{agree}", json={"label": "a"})
+        client.post(f"/review/{disagree}", json={"label": "b"})
+        agreement = client.get("/stats").json()["reviewer_agreement"]
+    assert agreement == {"resolved": 2, "agreed": 1, "rate": 0.5}
+
+
+def test_stats_since_filters_by_creation_time(tmp_path):
+    with confident_client(tmp_path, None) as client:
+        client.post("/route", json={"text": "now"})
+        assert client.get("/stats", params={"since": "2000-01-01T00:00:00Z"}).json()["requests"] == 1
+        assert client.get("/stats", params={"since": "2100-01-01T00:00:00Z"}).json()["requests"] == 0
+        assert client.get("/stats", params={"since": "2100-01-01T00:00:00"}).json()["requests"] == 0
+        assert client.get("/stats", params={"since": "2100-01-01T00:00:00+03:00"}).json()["requests"] == 0
+
+
+def test_stats_rejects_an_invalid_since(tmp_path):
+    with confident_client(tmp_path, None) as client:
+        assert client.get("/stats", params={"since": "yesterday"}).status_code == 422
