@@ -1,5 +1,27 @@
 from routeiq.schemas import ConfigResponse, LabelInfo, TierInfo
+from routeiq.redact import redact_urls
+from routeiq.schemas import RequestItem
 
+
+def request_item(row):
+    return RequestItem(
+        id=row["id"],
+        created_at=row["created_at"],
+        text=row["text"],
+        label=row["label"],
+        confidence=row["confidence"],
+        tier=row["tier"],
+        action=row["action"],
+        cost_usd=row["cost_usd"],
+        latency_ms=row["latency_ms"],
+        degraded=row["error"] is not None,
+        review_status=row["review_status"],
+        final_label=row["final_label"],
+        resolved_at=row["resolved_at"],
+        delivery_status=row["delivery_status"],
+        delivery_error=redact_urls(row["delivery_error"]),
+        delivered_at=row["delivered_at"],
+    )
 
 def describe_config(config=None, labels=None, tiers=None):
     if config is not None:

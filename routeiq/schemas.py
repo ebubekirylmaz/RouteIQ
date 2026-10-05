@@ -19,6 +19,23 @@ class ErrorResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
 
+class RequestItem(BaseModel):
+    id: int
+    created_at: datetime
+    text: str
+    label: str | None
+    confidence: float | None
+    tier: str | None
+    action: Literal["accepted", "human_review"]
+    cost_usd: float | None
+    latency_ms: float | None
+    degraded: bool
+    review_status: Literal["pending", "resolved"] | None
+    final_label: str | None
+    resolved_at: datetime | None
+    delivery_status: Literal["pending", "sent", "failed"] | None
+    delivery_error: str | None
+    delivered_at: datetime | None
 
 class LabelInfo(BaseModel):
     name: str
