@@ -1,5 +1,6 @@
 import react from "@vitejs/plugin-react";
-import { defineConfig, loadEnv } from "vite";
+import { loadEnv } from "vite";
+import { defineConfig } from "vitest/config";
 
 // The API lives at the root of the FastAPI app, the dashboard under /dashboard/.
 // In development the dev server forwards the API paths, so the browser sees one origin
@@ -29,5 +30,10 @@ export default defineConfig(({ mode }) => {
       ),
     },
     build: { outDir: "dist", sourcemap: true },
+    test: {
+      environment: "jsdom",
+      setupFiles: ["./src/test/setup.ts"],
+      restoreMocks: true,
+    },
   };
 });

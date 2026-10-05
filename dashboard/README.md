@@ -20,6 +20,18 @@ npm run dev           # http://localhost:5173/dashboard/
 
 The dev server forwards the API paths (`/review`, `/stats`, ...) to `http://localhost:8000`, so the browser sees one origin and no CORS setup is needed. Set `ROUTEIQ_API_URL` to use another address.
 
+## Tests
+
+```bash
+npm test              # one run
+npm run test:watch    # re-runs on every change
+npm run typecheck
+```
+
+Vitest runs the tests in jsdom, and MSW stands in for the API (`src/test/`). A request without a handler fails the test.
+
+The test tools are pinned to versions that work on Node 20 (`vitest` 4, `jsdom` 29, `@testing-library/jest-dom` 6.9, `msw` 2). Their newest releases need Node 22.12 or later, so they can move up together with Node.
+
 ## Build
 
 ```bash
