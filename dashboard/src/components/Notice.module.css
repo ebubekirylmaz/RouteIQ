@@ -1,0 +1,32 @@
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.success {
+  border-color: var(--ok);
+}
+
+.info {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.error {
+  border-color: var(--danger);
+}
+
+.dismiss {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

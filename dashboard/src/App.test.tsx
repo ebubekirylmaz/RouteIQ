@@ -1,9 +1,15 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { App } from "./App";
+import { serveReviewApi } from "./test/reviewServer";
 import { renderWithProviders } from "./test/utils";
+
+// The review queue screen loads its data, so the routes need a (here empty) API to talk to.
+beforeEach(() => {
+  serveReviewApi([]);
+});
 
 const heading = (name: string) => screen.getByRole("heading", { level: 1, name });
 

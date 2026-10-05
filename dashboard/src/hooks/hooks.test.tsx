@@ -297,3 +297,65 @@ describe("useResolveReview", () => {
     expect(queue.result.current.data?.items).toEqual([]);
   });
 });
+
+describe("useResolveReview outcome callback", () => {
+  const withApi = () => {
+    const api = serveQueue(3);
+    server.use(
+      http.post("*/review/:id", ({ params }) =>
+        HttpResponse.json({ id: Number(params.id), status: "resolved", final_label: "a" }),
+      ),
+    );
+    return api;
+  };
+
+  it("reports a success with the request and the label", async () => {
+    withApi();
+    const outcomes: unknown[] = [];
+    const { result } = renderHook(() => useResolveReview((outcome) => outcomes.push(outcome)), {
+      wrapper: createWrapper(),
+    });
+
+    await act(() => result.current.mutateAsync({ id: 4, label: "report_fraud" }));
+
+    expect(outcomes).toEqual([{ ok: true, id: 4, label: "report_fraud" }]);
+  });
+
+  it("reports a failure with the error", async () => {
+    withApi();
+    server.use(http.post("*/review/:id", () => HttpResponse.json({ detail: "gone" }, { status: 409 })));
+    const outcomes: { ok: boolean; error?: unknown }[] = [];
+    const { result } = renderHook(() => useResolveReview((outcome) => outcomes.push(outcome)), {
+      wrapper: createWrapper(),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({ id: 4, label: "a" }).catch(() => undefined);
+    });
+
+    expect(outcomes).toHaveLength(1);
+    expect(outcomes[0]).toMatchObject({ ok: false, id: 4, label: "a", error: { status: 409 } });
+  });
+
+  it("still reports when the row that asked has left the screen", async () => {
+    withApi();
+    const outcomes: unknown[] = [];
+    const { result, unmount } = renderHook(() => useResolveReview((outcome) => outcomes.push(outcome)), {
+      wrapper: createWrapper(),
+    });
+
+    act(() => {
+      result.current.mutate({ id: 4, label: "a" });
+    });
+    unmount();
+
+    await waitFor(() => expect(outcomes).toEqual([{ ok: true, id: 4, label: "a" }]));
+  });
+
+  it("works without a callback", async () => {
+    withApi();
+    const { result } = renderHook(() => useResolveReview(), { wrapper: createWrapper() });
+    await act(() => result.current.mutateAsync({ id: 1, label: "a" }));
+    expect(result.current.isSuccess).toBe(true);
+  });
+});
