@@ -117,3 +117,39 @@ def test_tier_failure_is_reported_as_degraded_without_leaking_details(tmp_path):
         assert body["label"] == "a"
         assert body["degraded"] is True
         assert "error" not in body
+
+# --- /review pagination ------------------------------------------------------------
+
+def test_review_queue_total_header_and_pagination(tmp_path):
+    with make_client(tmp_path, Fake("a", 0.3), Fake("b", 0.4)) as client:
+        created = [client.post("/route", json={"text": str(i)}).json()["request_id"] for i in range(5)]
+        first = client.get("/review", params={"limit": 2})
+        second = client.get("/review", params={"limit": 2, "offset": 2})
+        beyond = client.get("/review", params={"offset": 50})
+    assert [i["id"] for i in first.json()] == created[:2]
+    assert [i["id"] for i in second.json()] == created[2:4]
+    assert beyond.json() == []
+    for response in (first, second, beyond):
+        assert response.headers["X-Total-Count"] == "5"
+
+
+def test_review_total_header_follows_resolutions(tmp_path):
+    with make_client(tmp_path, Fake("a", 0.3), Fake("b", 0.4)) as client:
+        rid = client.post("/route", json={"text": "x"}).json()["request_id"]
+        assert client.get("/review").headers["X-Total-Count"] == "1"
+        client.post(f"/review/{rid}", json={"label": "a"})
+        response = client.get("/review")
+    assert response.json() == []
+    assert response.headers["X-Total-Count"] == "0"
+
+
+def test_review_total_header_is_zero_when_nothing_is_waiting(tmp_path):
+    with make_client(tmp_path, Fake("a", 0.9), Fake("b", 0.9)) as client:
+        client.post("/route", json={"text": "x"})
+        assert client.get("/review").headers["X-Total-Count"] == "0"
+
+
+@pytest.mark.parametrize("params", [{"offset": -1}, {"limit": 0}, {"limit": 101}])
+def test_review_pagination_bounds_are_validated(tmp_path, params):
+    with make_client(tmp_path, Fake("a", 0.3), Fake("b", 0.4)) as client:
+        assert client.get("/review", params=params).status_code == 422

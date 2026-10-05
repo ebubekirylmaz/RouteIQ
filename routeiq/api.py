@@ -98,9 +98,13 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
             background.add_task(deliver, app.state.store, app.state.target, request_id)
         return payload
 
-    @app.get("/review", response_model=list[ReviewItem])
-    def list_review(limit: int = Query(50, ge=1, le=100)):
-        return app.state.store.pending(limit)
+    @app.get("/review", response_model=list[ReviewItem], responses={200: {"headers": {"X-Total-Count": {
+        "description": "Number of requests pending review, ignoring limit",
+        "schema": {"type": "integer"},
+    }}}})
+    def list_review(response: Response, limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0)):
+        response.headers["X-Total-Count"] = str(app.state.store.pending_count())
+        return app.state.store.pending(limit, offset)
 
     @app.post(
         "/review/{request_id}",

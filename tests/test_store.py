@@ -367,3 +367,29 @@ def test_total_ignores_limit_and_offset_but_respects_filters(tmp_path):
 
 def test_list_requests_on_an_empty_database(tmp_path):
     assert Store(tmp_path / "a.db").list_requests() == ([], 0)
+
+
+# --- pending pagination ------------------------------------------------------------
+
+def test_pending_pagination_and_count(tmp_path):
+    store = Store(tmp_path / "a.db")
+    review = [store.log(str(i), needs_review()) for i in range(5)]
+    store.log("fine", accepted())
+    assert store.pending_count() == 5
+    assert [r["id"] for r in store.pending(limit=2)] == review[:2]
+    assert [r["id"] for r in store.pending(limit=2, offset=2)] == review[2:4]
+    assert [r["id"] for r in store.pending(limit=2, offset=4)] == review[4:]
+    assert store.pending(limit=2, offset=9) == []
+
+
+def test_pending_count_drops_when_a_request_is_resolved(tmp_path):
+    store = Store(tmp_path / "a.db")
+    first = store.log("one", needs_review())
+    store.log("two", needs_review())
+    store.resolve(first, "a")
+    assert store.pending_count() == 1
+    assert [r["text"] for r in store.pending()] == ["two"]
+
+
+def test_pending_count_on_an_empty_database(tmp_path):
+    assert Store(tmp_path / "a.db").pending_count() == 0

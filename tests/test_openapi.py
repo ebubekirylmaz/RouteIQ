@@ -220,3 +220,11 @@ def test_request_item_fields(spec):
     }
     assert "error" not in item["properties"]
     assert item["properties"]["action"]["enum"] == ["accepted", "human_review"]
+
+
+def test_review_endpoint_supports_offset_and_declares_the_total_header(spec):
+    operation = spec["paths"]["/review"]["get"]
+    params = {p["name"]: p["schema"] for p in operation["parameters"]}
+    assert set(params) == {"limit", "offset"}
+    assert params["offset"]["minimum"] == 0
+    assert operation["responses"]["200"]["headers"]["X-Total-Count"]["schema"]["type"] == "integer"

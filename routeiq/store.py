@@ -86,14 +86,20 @@ class Store:
             )
             return cur.lastrowid
 
-    def pending(self, limit=50):
+    def pending(self, limit=50, offset=0):
         with closing(self._connect()) as conn:
             rows = conn.execute(
                 "SELECT id, created_at, text, label AS suggested_label, confidence, tier"
-                " FROM requests WHERE review_status = 'pending' ORDER BY id LIMIT ?",
-                (limit,),
+                " FROM requests WHERE review_status = 'pending' ORDER BY id LIMIT ? OFFSET ?",
+                (limit, offset),
             ).fetchall()
         return [dict(r) for r in rows]
+
+    def pending_count(self):
+        with closing(self._connect()) as conn:
+            return conn.execute(
+                "SELECT COUNT(*) FROM requests WHERE review_status = 'pending'"
+            ).fetchone()[0]
 
     def get(self, request_id):
         with closing(self._connect()) as conn:
