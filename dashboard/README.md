@@ -60,7 +60,7 @@ src/
 ├── lib/                pure functions: formatting, paging, history URL parsing, chart data
 ├── components/         Layout, Pager, Notice, the review, overview and history building blocks
 │   └── charts/         Recharts wrappers and the data table next to the charts
-├── pages/              ReviewQueue, Overview, Charts (lazy-loaded), History, NotFound
+├── pages/              ReviewQueue, Overview, Charts (lazy-loaded), History, TryIt, NotFound
 ├── test/               MSW server and one fake API per area
 └── queryClient.ts      retry and cache defaults
 ```

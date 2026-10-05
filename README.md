@@ -57,7 +57,7 @@ RouteIQ explores a simple idea: **use the cheapest model that is confident enoug
 - **Confidence-based cascade.** Two thresholds decide between accept, escalate and human review.
 - **Human-in-the-loop queue.** Low-confidence items are stored with the model's suggestion for a person to confirm or correct.
 - **Integration adapters.** Webhook, mock ERP (OData-style REST) and JSON Lines export out of the box. Delivery runs after the response, and its status is tracked per request.
-- **Dashboard.** A React UI served by the API under `/dashboard/`: a review queue for a person to confirm or correct the model's suggestion, an overview with cost, latency and delivery status, charts over time, and a searchable request history.
+- **Dashboard.** A React UI served by the API under `/dashboard/`: a review queue for a person to confirm or correct the model's suggestion, an overview with cost, latency and delivery status, charts over time, a searchable request history, and a form to try a text.
 - **Built-in evaluation.** Accuracy, macro-F1, cost per 1,000 requests, p50/p95 latency, calibration and escalation rate, all from one command.
 - **One worked example.** Ships with a bank-support scenario built on the public CLINC150 dataset. More example domains are planned (see [Roadmap](#roadmap)).
 
@@ -182,10 +182,22 @@ Open `http://localhost:8000/dashboard/`. Node 20.19 or later is needed to build.
 | Overview | Totals for the last 24 hours, 7 days or all time: requests, cost, p95 latency, requests where a tier failed, how requests ended, and the delivery status with a button to resend failed deliveries |
 | Charts | Requests (accepted or sent to a person), cumulative cost and average latency per hour or day, and a table of the same numbers below the charts |
 | History | Every request, newest first, with filters (outcome, review, delivery, tier, tier failure), text search and paging. Filters and page are kept in the address, so a view can be bookmarked. A row opens to show the full text and the delivery problem |
+| Try it | Send a text through the cascade and see its label, confidence, tier, cost and latency. The text is stored like any other request and may call the paid model. Ctrl or Cmd + Enter sends |
 
 Times are shown in UTC. The overview shows reviewer agreement next to a note that it is not the model's accuracy (see [Statistics](#statistics)).
 
 The dashboard has no login, like the API. Publish it on localhost only, or put both behind a gateway.
+
+### Demo data
+
+A new installation has no requests, so every screen is empty. To see the dashboard filled without real traffic, write synthetic requests into a separate database and start the API on it:
+
+```bash
+python scripts/seed_demo.py                    # writes demo.db
+ROUTEIQ_DB=demo.db uvicorn routeiq.api:app
+```
+
+The texts come from a few templates, and the outcomes (confidence, cost, latency, which requests were reviewed, which deliveries failed) are drawn at random with a fixed seed, so the same command gives the same history. They are not results of the models. The script calls no model, and it refuses to write into a database that already has requests unless `--add` is given. The API itself still needs `OPENROUTER_API_KEY` to start, as with the real configuration.
 
 For development, run the API and `npm run dev` in `dashboard/` (http://localhost:5173/dashboard/); the dev server forwards the API paths, so no CORS setup is needed. After an API change, regenerate the schema and the types:
 
@@ -396,7 +408,7 @@ routeiq/
 │   ├── views.py             # builds the public views (config, request items)
 │   ├── models/              # classifier adapters and registry
 │   └── integrations/        # JSONL export, webhook, mock ERP
-├── scripts/                 # export_openapi.py: writes the schema the UI types come from
+├── scripts/                 # export_openapi.py (schema for the UI types), seed_demo.py (synthetic demo data)
 ├── tests/
 ├── Dockerfile
 ├── docker-compose.yml
@@ -448,8 +460,8 @@ The dashboard has its own tests and type check (`cd dashboard && npm test && npm
 - [ ] Automated test that the threshold simulation in `evaluate.py` matches the live cascade
 - [ ] Example domains with synthetic data, labeled as synthetic (electric-vehicle after-sales, supplier communication, internal requests)
 - [ ] Jev adapter (if access is available)
-- [x] Dashboard (React + TypeScript): review queue, overview, charts and request history
-- [ ] Dashboard: a form to route a text and see the result, and accuracy charts (these need labeled ground truth, which production requests do not have)
+- [x] Dashboard (React + TypeScript): review queue, overview, charts, request history and a form to try a text
+- [ ] Dashboard: accuracy charts (these need labeled ground truth, which production requests do not have)
 - [ ] Threshold auto-tuning from review feedback
 - [ ] Drift monitoring
 
