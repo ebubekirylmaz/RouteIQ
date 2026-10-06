@@ -24,6 +24,8 @@ RUN mkdir routeiq && touch routeiq/__init__.py && pip install -e .
 
 COPY routeiq ./routeiq
 COPY configs ./configs
+# Recorded predictions: the Evaluation screen is computed from them.
+COPY demo ./demo
 COPY data/prepare_clinc.py ./data/prepare_clinc.py
 
 # Build the benchmark data and train the baseline model into the image.

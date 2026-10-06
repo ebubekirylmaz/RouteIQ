@@ -15,7 +15,7 @@ from routeiq.integrations import build_target
 from routeiq.integrations import mock_erp as mock_erp_module
 from routeiq.models.registry import build_tiers
 from routeiq.schemas import (
-    ConfigResponse, ErrorResponse, HealthResponse, RequestItem, ReviewDecision,
+    ConfigResponse, ErrorResponse, EvaluationResponse, HealthResponse, RequestItem, ReviewDecision,
     ReviewItem, ReviewResolved, RetryResult, RouteRequest, RouteResponse, StatsResponse,
     TimeseriesResponse,
 )
@@ -39,11 +39,13 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
             app.state.tiers = build_tiers(config)
             app.state.labels = config["labels"]
             app.state.target = build_target(config)
+            app.state.config = config
             app.state.config_view = describe_config(config=config)
         else:
             app.state.tiers = tiers
             app.state.labels = labels
             app.state.target = target
+            app.state.config = None
             app.state.config_view = describe_config(labels=labels, tiers=tiers)
         app.state.store = Store(db_path or os.getenv("ROUTEIQ_DB", str(ROOT / "routeiq.db")))
         yield
@@ -73,6 +75,23 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
     @app.get("/config", response_model=ConfigResponse)
     def get_config():
         return app.state.config_view
+
+    @app.get(
+        "/evaluation",
+        response_model=EvaluationResponse,
+        responses={404: {"model": ErrorResponse}},
+    )
+    def get_evaluation():
+        """Accuracy, cost and calibration measured offline on labeled examples, not on live traffic."""
+        # pandas and scikit-learn are only needed here, so the service starts without loading them.
+        from routeiq import evaluation
+
+        if app.state.config is None:
+            raise HTTPException(status_code=404, detail="no evaluation is available for this configuration")
+        try:
+            return evaluation.build_report(app.state.config)
+        except evaluation.EvaluationUnavailable as error:
+            raise HTTPException(status_code=404, detail=str(error))
 
     @app.get(
         "/requests",

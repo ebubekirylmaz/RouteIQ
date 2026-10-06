@@ -143,3 +143,62 @@ class TimeseriesResponse(BaseModel):
     since: datetime
     until: datetime
     points: list[TimeseriesPoint]
+
+
+class EvaluationTier(BaseModel):
+    name: str
+    accept_threshold: float
+
+
+class EvaluationSetup(BaseModel):
+    name: str
+    description: str
+    accuracy: float
+    accuracy_low: float = Field(description="Lower end of the 95% (Wilson) interval of the accuracy.")
+    accuracy_high: float = Field(description="Upper end of the 95% (Wilson) interval of the accuracy.")
+    macro_f1: float
+    cost_per_1k_usd: float
+    p50_ms: float
+    p95_ms: float
+    assumes_reviewer_always_right: bool = Field(
+        description="True when the figure counts every request sent to a person as answered correctly."
+    )
+
+
+class CascadeGroup(BaseModel):
+    kind: Literal["accepted", "human_review"]
+    tier: str | None = Field(description="The tier that accepted the examples. Null for the ones sent to a person.")
+    count: int
+    correct: int = Field(description="How many of them got the true label. For human review: the model's suggestion.")
+
+
+class CascadeBreakdown(BaseModel):
+    groups: list[CascadeGroup]
+    escalated: int = Field(description="Examples that needed more than one tier.")
+
+
+class CalibrationBin(BaseModel):
+    lower: float
+    upper: float
+    n: int
+    mean_confidence: float
+    accuracy: float
+
+
+class TierCalibration(BaseModel):
+    tier: str
+    ece: float = Field(description="Expected calibration error: 0 means the confidence is what it claims to be.")
+    bins: list[CalibrationBin]
+
+
+class EvaluationResponse(BaseModel):
+    """An offline measurement on labeled examples, not on live traffic."""
+    domain: str
+    split: str
+    n: int
+    data_source: Literal["public", "synthetic", "private"] | None
+    tiers: list[EvaluationTier]
+    setups: list[EvaluationSetup]
+    cascade: CascadeBreakdown
+    calibration: list[TierCalibration]
+
