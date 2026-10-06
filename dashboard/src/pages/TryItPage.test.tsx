@@ -1,12 +1,15 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { routeResult, serveRouteApi } from "../test/routeServer";
+import { routeResult, serveConfig, serveRouteApi } from "../test/routeServer";
 import { server } from "../test/server";
 import { renderWithProviders } from "../test/utils";
 import { TryItPage } from "./TryItPage";
+
+// The screen asks for the config (for its example texts), so it needs an answer.
+beforeEach(() => serveConfig());
 
 const show = () => renderWithProviders(<TryItPage />, { route: "/try" });
 const box = () => screen.getByLabelText("Text");
@@ -288,5 +291,102 @@ describe("what was tried on this screen", () => {
     show();
     expect(screen.queryByText("Accepted by baseline")).not.toBeInTheDocument();
     expect(box()).toHaveValue("");
+  });
+});
+
+describe("the examples", () => {
+  const EXAMPLES = ["my card got declined at the store", "please freeze my account"];
+  const buttons = () => within(screen.getByRole("group", { name: "Example texts" })).getAllByRole("button");
+
+  it("offers the examples of the config as buttons", async () => {
+    serveConfig(EXAMPLES);
+    show();
+    expect(await screen.findByRole("group", { name: "Example texts" })).toBeInTheDocument();
+    expect(buttons().map((b) => b.textContent)).toEqual(EXAMPLES);
+  });
+
+  it.each([[[]], [undefined]])("shows nothing when the config has no examples (%j)", async (examples) => {
+    serveConfig(examples as string[] | undefined);
+    show();
+    await screen.findByRole("heading", { level: 1, name: "Try it" });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByRole("group", { name: "Example texts" })).not.toBeInTheDocument();
+  });
+
+  it("shows nothing, and the screen still works, when the config cannot be loaded", async () => {
+    server.use(http.get("*/config", () => HttpResponse.json({ detail: "boom" }, { status: 500 })));
+    const api = serveRouteApi();
+    show();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByRole("group", { name: "Example texts" })).not.toBeInTheDocument();
+    await route("hello");
+    expect(await screen.findByText("Accepted by baseline")).toBeInTheDocument();
+    expect(api.texts).toEqual(["hello"]);
+  });
+
+  it("puts an example in the box and moves the focus there, without sending it", async () => {
+    serveConfig(EXAMPLES);
+    const api = serveRouteApi();
+    show();
+    await userEvent.click((await screen.findByRole("button", { name: EXAMPLES[0] as string })));
+
+    expect(box()).toHaveValue(EXAMPLES[0]);
+    expect(box()).toHaveFocus();
+    expect(screen.getByText(`${(EXAMPLES[0] as string).length} / 5,000`)).toBeInTheDocument();
+    expect(send()).toBeEnabled();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(api.texts).toHaveLength(0);
+  });
+
+  it("replaces what was typed", async () => {
+    serveConfig(EXAMPLES);
+    show();
+    await userEvent.type(box(), "something else");
+    await userEvent.click(await screen.findByRole("button", { name: EXAMPLES[1] as string }));
+    expect(box()).toHaveValue(EXAMPLES[1]);
+  });
+
+  it("sends the example when the person decides to", async () => {
+    serveConfig(EXAMPLES);
+    const api = serveRouteApi();
+    show();
+    await userEvent.click(await screen.findByRole("button", { name: EXAMPLES[0] as string }));
+    await userEvent.click(send());
+    await screen.findByText("Accepted by baseline");
+    expect(api.texts).toEqual([EXAMPLES[0]]);
+  });
+
+  it("can be changed after it was put in the box", async () => {
+    serveConfig(EXAMPLES);
+    const api = serveRouteApi();
+    show();
+    await userEvent.click(await screen.findByRole("button", { name: EXAMPLES[0] as string }));
+    await userEvent.type(box(), " yesterday");
+    await userEvent.click(send());
+    await screen.findByText("Accepted by baseline");
+    expect(api.texts).toEqual([`${EXAMPLES[0]} yesterday`]);
+  });
+
+  it("cannot be used while a text is on its way", async () => {
+    serveConfig(EXAMPLES);
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    server.use(
+      http.post("*/route", async () => {
+        await gate;
+        return HttpResponse.json(routeResult());
+      }),
+    );
+    show();
+    await screen.findByRole("group", { name: "Example texts" });
+    await userEvent.type(box(), "hello");
+    await userEvent.click(send());
+
+    await screen.findByRole("button", { name: "Routing…" });
+    buttons().forEach((button) => expect(button).toBeDisabled());
+
+    release();
+    await screen.findByText("Accepted by baseline");
+    buttons().forEach((button) => expect(button).toBeEnabled());
   });
 });

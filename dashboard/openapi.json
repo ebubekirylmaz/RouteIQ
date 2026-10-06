@@ -30,6 +30,13 @@
             ],
             "title": "Domain"
           },
+          "examples": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Examples",
+            "type": "array"
+          },
           "labels": {
             "items": {
               "$ref": "#/components/schemas/LabelInfo"
@@ -73,7 +80,8 @@
           "labels",
           "tiers",
           "target_type",
-          "data_source"
+          "data_source",
+          "examples"
         ],
         "title": "ConfigResponse",
         "type": "object"

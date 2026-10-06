@@ -167,6 +167,8 @@ export interface components {
             data_source: ("public" | "synthetic" | "private") | null;
             /** Domain */
             domain: string | null;
+            /** Examples */
+            examples: string[];
             /** Labels */
             labels: components["schemas"]["LabelInfo"][];
             /** Target Type */

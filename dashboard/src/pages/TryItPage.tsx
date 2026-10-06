@@ -1,7 +1,8 @@
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
 import type { RouteResult } from "../api/endpoints";
 import { TryItResult } from "../components/TryItResult";
+import { useConfig } from "../hooks/useConfig";
 import { useRouteText } from "../hooks/useRouteText";
 import { formatCount, truncate } from "../lib/format";
 import { MAX_TEXT_LENGTH, canSubmit, describeRoute, describeRouteError, normalizeText } from "../lib/tryIt";
@@ -20,6 +21,8 @@ type Attempt = { id: number; text: string; result: RouteResult };
 export function TryItPage() {
   const [text, setText] = useState("");
   const [attempts, setAttempts] = useState<Attempt[]>([]);
+  const box = useRef<HTMLTextAreaElement>(null);
+  const examples = useConfig().data?.examples ?? [];
 
   const route = useRouteText((sent, result) =>
     setAttempts((previous) => [{ id: result.request_id, text: sent, result }, ...previous].slice(0, MAX_ATTEMPTS)),
@@ -29,6 +32,12 @@ export function TryItPage() {
     event?.preventDefault();
     if (!canSubmit(text) || route.isPending) return;
     route.mutate({ text: normalizeText(text) });
+  };
+
+  // An example only fills the box. Sending it is a decision of the person: it costs money and is stored.
+  const fillWith = (example: string) => {
+    setText(example);
+    box.current?.focus();
   };
 
   // Cmd or Ctrl + Enter sends. A plain Enter is a new line, as in any text box.
@@ -53,6 +62,7 @@ export function TryItPage() {
         <label htmlFor="try-text">Text</label>
         <textarea
           id="try-text"
+          ref={box}
           rows={4}
           value={text}
           maxLength={MAX_TEXT_LENGTH}
@@ -72,6 +82,17 @@ export function TryItPage() {
         </div>
         <p className={styles.hint}>Press Ctrl or Cmd + Enter to send.</p>
       </form>
+
+      {examples.length > 0 && (
+        <div className={styles.examples} role="group" aria-label="Example texts">
+          <span className={styles.examplesTitle}>Or start from an example:</span>
+          {examples.map((example) => (
+            <button key={example} type="button" disabled={route.isPending} onClick={() => fillWith(example)}>
+              {example}
+            </button>
+          ))}
+        </div>
+      )}
 
       {route.isError && (
         <div className={styles.problem} role="alert">

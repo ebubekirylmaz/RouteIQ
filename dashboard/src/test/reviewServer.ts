@@ -53,7 +53,7 @@ export function serveReviewApi(
     http.get("*/config", () => {
       configCalls += 1;
       return HttpResponse.json({
-        domain: "demo", task: "support", labels, tiers: [], target_type: null, data_source: null, ...config,
+        domain: "demo", task: "support", labels, tiers: [], target_type: null, data_source: null, examples: [], ...config,
       });
     }),
     http.get("*/review", ({ request }) => {

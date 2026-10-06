@@ -38,3 +38,15 @@ export function serveRouteApi(respond?: FakeRouteApi["respond"]): FakeRouteApi {
   );
   return api;
 }
+
+/** GET /config with the example sentences of the Try it screen. */
+export function serveConfig(examples: string[] = [], overrides: Record<string, unknown> = {}) {
+  server.use(
+    http.get("*/config", () =>
+      HttpResponse.json({
+        domain: "demo", task: "support", labels: [], tiers: [], target_type: null, data_source: null,
+        examples, ...overrides,
+      }),
+    ),
+  );
+}
