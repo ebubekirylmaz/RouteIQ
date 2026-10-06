@@ -2,7 +2,7 @@ import pytest
 
 from routeiq.config import ROOT, load_config
 from routeiq.models.openrouter import OpenRouterClassifier
-from routeiq.models.registry import build_classifier
+from routeiq.models.registry import build_classifier, build_tiers
 
 
 @pytest.fixture(autouse=True)
@@ -47,3 +47,36 @@ def test_unknown_model_type_is_rejected():
     config = load_config(ROOT / "configs" / "clinc150.yaml")
     with pytest.raises(ValueError):
         build_classifier(config, {"name": "x", "model": "magic"})
+
+
+def baseline_tier(config):
+    return next(t for t in config["tiers"] if t["model"] == "sklearn_tfidf_logreg")
+
+
+def test_a_missing_baseline_model_says_which_domain_and_how_to_train_it(tmp_path, monkeypatch):
+    monkeypatch.setattr("routeiq.config.MODELS_DIR", tmp_path)
+    config = load_config(ROOT / "configs" / "ev_after_sales.yaml")
+    with pytest.raises(FileNotFoundError) as info:
+        build_classifier(config, baseline_tier(config))
+    message = str(info.value)
+    assert "'baseline'" in message and "'ev_after_sales'" in message
+    assert str(tmp_path / "ev_after_sales_baseline.joblib") in message
+    assert "python -m routeiq.train --config" in message
+
+
+def test_building_all_tiers_stops_at_the_missing_model_before_asking_for_a_key(tmp_path, monkeypatch):
+    monkeypatch.setattr("routeiq.config.MODELS_DIR", tmp_path)
+    monkeypatch.delenv("OPENROUTER_API_KEY")
+    config = load_config(ROOT / "configs" / "ev_after_sales.yaml")
+    with pytest.raises(FileNotFoundError, match="no trained model"):
+        build_tiers(config)
+
+
+def test_an_existing_baseline_model_is_loaded(tmp_path, monkeypatch):
+    import joblib
+
+    monkeypatch.setattr("routeiq.config.MODELS_DIR", tmp_path)
+    config = load_config(ROOT / "configs" / "ev_after_sales.yaml")
+    joblib.dump({"stand-in": True}, tmp_path / "ev_after_sales_baseline.joblib")
+    classifier = build_classifier(config, baseline_tier(config))
+    assert classifier.pipeline == {"stand-in": True}

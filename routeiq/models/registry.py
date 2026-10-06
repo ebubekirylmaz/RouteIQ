@@ -5,7 +5,13 @@ from routeiq.models.openrouter import OpenRouterClassifier
 def build_classifier(config, tier):
     kind = tier["model"]
     if kind == "sklearn_tfidf_logreg":
-        return SklearnTfidfLogreg(model_path(config, tier["name"]))
+        path = model_path(config, tier["name"])
+        if not path.exists():
+            raise FileNotFoundError(
+                f"no trained model for tier '{tier['name']}' of domain '{config['domain']}' (expected {path}). "
+                "Train it first: python -m routeiq.train --config <the config of this domain>"
+            )
+        return SklearnTfidfLogreg(path)
     if kind == "openrouter":
         return OpenRouterClassifier(
             tier["model_id"],
