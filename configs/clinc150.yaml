@@ -20,6 +20,14 @@ label_descriptions:
   freeze_account: the customer wants the account blocked or locked.
   out_of_scope: anything else, including messages unrelated to banking.
 
+examples:                               # sentences offered as buttons on the Try it screen
+  - I lost my debit card yesterday
+  - my card got declined at the store
+  - there is a charge on my statement that I did not make
+  - please freeze my account
+  - my card is cracked and will not read
+  - what is the weather like today
+
 tiers:
   - name: baseline
     model: sklearn_tfidf_logreg

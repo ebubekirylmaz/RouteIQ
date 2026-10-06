@@ -24,6 +24,15 @@ label_descriptions:
   parts_order: the customer wants to buy or asks about the price, availability or compatibility of a spare part or accessory.
   out_of_scope: anything else, including messages unrelated to the car.
 
+examples:                               # sentences offered as buttons on the Try it screen
+  - my Orbit will not charge at the motorway station
+  - I want to book a service appointment for next friday
+  - the range of my car dropped a lot this winter
+  - the update failed and the screen keeps rebooting
+  - where can I order a new charging cable
+  - the battery is defective, is it covered by the warranty
+  - what is the capital of Norway
+
 tiers:
   - name: baseline
     model: sklearn_tfidf_logreg

@@ -67,6 +67,7 @@ class ConfigResponse(BaseModel):
     tiers: list[TierInfo]
     target_type: str | None
     data_source: Literal["public", "synthetic", "private"] | None
+    examples: list[str]
 
 class RouteResponse(BaseModel):
     label: str | None

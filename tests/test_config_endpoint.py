@@ -167,3 +167,21 @@ def test_the_endpoint_returns_it(tmp_path, monkeypatch, line, expected):
 
     with TestClient(create_app()) as client:
         assert client.get("/config").json()["data_source"] == expected
+
+
+# --- examples ----------------------------------------------------------------------------------------
+
+def test_the_view_carries_the_examples_in_order():
+    view = describe_config(config=config_with(examples=["second thing", "first thing"]))
+    assert view.examples == ["second thing", "first thing"]
+
+
+def test_a_config_without_examples_has_an_empty_list_in_the_view():
+    assert describe_config(config=config_with()).examples == []
+    assert describe_config(labels=["a"], tiers=[]).examples == []
+
+
+def test_the_shipped_configs_hand_their_examples_to_the_view():
+    for path in (ROOT / "configs").glob("*.yaml"):
+        config = load_config(path)
+        assert describe_config(config=config).examples == config["examples"]

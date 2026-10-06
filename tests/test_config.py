@@ -248,3 +248,38 @@ def test_every_shipped_config_is_valid_and_says_where_its_data_comes_from(path):
     loaded = load_config(path)
     assert loaded["data_source"] in ("public", "synthetic", "private")
     assert loaded["domain"] == path.stem
+
+
+# --- examples ----------------------------------------------------------------------------------------------
+
+def test_a_list_of_examples_is_accepted():
+    validate_config(config(examples=["my card got declined", "please freeze my account"]))
+
+
+def test_a_config_without_examples_is_still_valid():
+    validate_config(config())
+
+
+@pytest.mark.parametrize(
+    "examples, message",
+    [
+        ([], "'examples' must be a non-empty list of non-empty strings"),
+        ("one sentence", "'examples' must be a non-empty list"),
+        (["fine", ""], "'examples' must be a non-empty list"),
+        (["fine", 3], "'examples' must be a non-empty list"),
+        (["a", "a"], "'examples' contains duplicates"),
+        ([f"example {i}" for i in range(13)], "at most 12 are allowed"),
+        (["x" * 201], "at most 200 characters"),
+    ],
+)
+def test_bad_examples_are_refused_with_the_reason(examples, message):
+    assert message in errors_of(config(examples=examples))
+
+
+def test_twelve_examples_of_200_characters_are_the_most_that_is_accepted():
+    validate_config(config(examples=[f"{i:02d}" + "x" * 198 for i in range(12)]))
+
+
+@pytest.mark.parametrize("path", sorted((ROOT / "configs").glob("*.yaml")), ids=lambda p: p.name)
+def test_every_shipped_config_offers_examples(path):
+    assert len(load_config(path)["examples"]) >= len(load_config(path)["labels"]) - 1

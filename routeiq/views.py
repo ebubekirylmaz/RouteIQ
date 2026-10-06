@@ -41,6 +41,7 @@ def describe_config(config=None, labels=None, tiers=None):
             ],
             target_type=(config.get("target") or {}).get("type"),
             data_source=config.get("data_source"),
+            examples=list(config.get("examples") or []),
         )
     return ConfigResponse(
         domain=None,
@@ -53,4 +54,5 @@ def describe_config(config=None, labels=None, tiers=None):
         ],
         target_type=None,
         data_source=None,
+        examples=[],
     )

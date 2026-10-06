@@ -25,8 +25,10 @@ TARGET_KEYS = {
     "mock_erp": {"type", "url"},
 }
 TARGET_REQUIRED = {"jsonl": "path", "webhook": "url", "mock_erp": "url"}
+MAX_EXAMPLES = 12
+MAX_EXAMPLE_LENGTH = 200
 DATA_SOURCES = ("public", "synthetic", "private")
-TOP_KEYS = {"domain", "data_source", "labels", "task", "label_descriptions", "tiers", "target"}
+TOP_KEYS = {"domain", "data_source", "labels", "task", "label_descriptions", "examples", "tiers", "target"}
 
 
 def _is_number(value):
@@ -120,6 +122,18 @@ def validate_config(config):
 
     if "data_source" in config and config["data_source"] not in DATA_SOURCES:
         errors.append(f"'data_source' must be one of: {', '.join(DATA_SOURCES)}")
+
+    if "examples" in config:
+        examples = config["examples"]
+        if not isinstance(examples, list) or not examples or not all(_is_text(e) for e in examples):
+            errors.append("'examples' must be a non-empty list of non-empty strings")
+        else:
+            if len(examples) > MAX_EXAMPLES:
+                errors.append(f"'examples' has {len(examples)} entries, at most {MAX_EXAMPLES} are allowed")
+            if any(len(e) > MAX_EXAMPLE_LENGTH for e in examples):
+                errors.append(f"every entry of 'examples' must have at most {MAX_EXAMPLE_LENGTH} characters")
+            if len(set(examples)) != len(examples):
+                errors.append("'examples' contains duplicates")
 
     if "task" in config and not _is_text(config["task"]):
         errors.append("'task' must be a non-empty string")
