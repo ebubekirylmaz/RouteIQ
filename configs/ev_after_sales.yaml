@@ -1,0 +1,42 @@
+# Example domain: customer messages to the after-sales service of an electric-vehicle maker.
+# The data is SYNTHETIC (see data/synthetic/ev_after_sales.yaml). The thresholds are copied from
+# the CLINC150 config and were not tuned for this domain.
+domain: ev_after_sales
+data_source: synthetic
+
+labels:
+  - warranty_claim
+  - charging_problem
+  - service_appointment
+  - range_complaint
+  - software_update_issue
+  - parts_order
+  - out_of_scope
+
+task: customer messages to an electric-vehicle after-sales service
+
+label_descriptions:
+  warranty_claim: the customer reports a defect and asks whether the warranty covers it, or asks for a repair or replacement under warranty.
+  charging_problem: the car does not charge, charges too slowly, or the charging port, cable or charging app fails.
+  service_appointment: the customer wants to book, move or cancel a workshop appointment, or asks about service slots and what a service includes.
+  range_complaint: the customer complains that the driving range is lower than expected or has dropped.
+  software_update_issue: something broke or got stuck during or after a software update of the car or its app.
+  parts_order: the customer wants to buy or asks about the price, availability or compatibility of a spare part or accessory.
+  out_of_scope: anything else, including messages unrelated to the car.
+
+tiers:
+  - name: baseline
+    model: sklearn_tfidf_logreg
+    accept_threshold: 0.7
+  - name: llm
+    model: openrouter
+    model_id: mistralai/mistral-small-3.2-24b-instruct
+    price_in_per_m: 0.09
+    price_out_per_m: 0.30
+    accept_threshold: 0.90
+    timeout: 10
+    max_attempts: 2
+
+target:
+  type: mock_erp
+  url: http://localhost:8000/mock-erp/api/tickets

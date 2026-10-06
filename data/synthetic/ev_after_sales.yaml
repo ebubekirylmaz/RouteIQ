@@ -1,0 +1,126 @@
+# SYNTHETIC data for the ev_after_sales example domain.
+# Every text is generated from the templates below. None of it is real customer text, and the
+# car models are made up. Accuracy on data like this says nothing about real-world accuracy.
+#
+# How the splits are made (see routeiq/synthetic.py): the templates of every label are divided
+# between train, validation and test, so a sentence pattern used for testing was never seen in
+# training. Texts are never repeated, not even across labels.
+domain: ev_after_sales
+seed: 7
+
+# Examples per label in each split.
+per_label:
+  train: 60
+  val: 20
+  test: 30
+
+# Chance (0 to 1) that a text gets each kind of messiness.
+noise:
+  lowercase: 0.3    # all lower case, no capitals
+  typo: 0.2         # one misspelled word
+  filler: 0.25      # a greeting before it or a thank-you after it
+
+slots:
+  model: [Aria, Volt S, Nimbus, Kite, Orbit, Ember]
+  part: [battery pack, charging port, infotainment screen, door handle, heat pump, rear camera, seat heater, suspension arm]
+  time: [two weeks, a month, three months, half a year, the first winter]
+  age: [8 months, a year, 14 months, almost two years, three years]
+  issue: [crack, rattling noise, error message, leak, flickering, rust spot, strange smell]
+  place: [home, work, a public charger, the motorway station, my parents' house, the supermarket car park]
+  error: [error 41, a red warning light, a "check charging system" message, a timeout message, a "cable not locked" message]
+  rate: [3 kW, 7 kW, 11 kW, 30 kW]
+  percent: [8%, 10%, 12%, 15%, 20%, 35%]
+  day: [monday, tuesday, wednesday, thursday, friday, saturday]
+  city: [Hamburg, Leeds, Lyon, Izmir, Utrecht, Porto]
+  service: [annual inspection, tyre change, brake check, battery health check, cabin filter replacement]
+  month: [March, June, August, December]
+  km: [180, 210, 240, 260, 310]
+  km2: [350, 400, 450, 480, 520]
+  weather: [cold weather, winter, heavy rain, a heatwave]
+  road: [motorway, mountain road, city roads]
+  version: ["4.2", "5.0", "5.1", "6.3"]
+  feature: [lane assist, voice control, climate preset, parking camera view, navigation, phone key]
+  fault: [error 17, a white screen, a boot loop, an "update interrupted" message]
+  accessory: [charging cable, floor mats, roof box, wheel cover, key fob, phone mount, wiper blades, mud flaps]
+  animal: [cats, penguins, giraffes]
+  food: [banana, cheese pizza, bowl of rice]
+  country: [Portugal, Norway, Chile, Kenya]
+
+labels:
+  warranty_claim:
+    - the {part} on my {model} stopped working after {time}, is that covered by the warranty
+    - my {model} is only {age} old and the {part} already needs replacing, I think the warranty should pay for it
+    - I want to file a warranty claim for the {part}
+    - there is a {issue} with the {part} of my {model}, who pays for the repair under warranty
+    - is a faulty {part} still covered, I bought the {model} {age} ago
+    - the workshop says the {part} is defective, please confirm the warranty covers it
+    - I need a replacement {part} under warranty, the {model} is {age} old
+    - how do I start a warranty case, the {part} shows a {issue}
+    - warranty request for the {part} with a {issue}, the car is {age} old
+    - my {model} had the {part} replaced once already and it failed again, can this be handled as a warranty case
+  charging_problem:
+    - my {model} will not charge at {place}
+    - charging stops after a few minutes at {place} and the display shows {error}
+    - the charging port of my {model} will not release the cable at {place}
+    - charging is really slow today, only {rate} at {place}
+    - the app says charging failed with {error}
+    - the {model} does not recognise the charger at {place}
+    - I plugged in at {place} last night and the battery is still at {percent}
+    - the charge cable gets very hot while charging at {place}
+    - charging scheduled in the app never starts, the car shows {error}
+    - fast charging is limited to {rate} even though the station is rated much higher
+  service_appointment:
+    - I need to book a service appointment for my {model} next {day}
+    - can I move my appointment on {day} to the following week
+    - please cancel my workshop booking, I can no longer come on {day}
+    - when is the next free slot for the {service} of the {model}
+    - do you have a workshop near {city} that can do the {service}
+    - I would like to schedule the {service} before my trip in {month}
+    - is it possible to get a courtesy car during the {service}
+    - I got a reminder for the {service}, how do I make an appointment
+    - how long does the {service} take, I want to book a morning slot on {day}
+    - my appointment for {day} was not confirmed, can you check
+  range_complaint:
+    - the range of my {model} dropped to {km} km on a full battery
+    - in {weather} I only get about {km} km, the brochure promised much more
+    - why does my {model} lose {percent} of the battery overnight
+    - the range estimate on the display jumps around, it said {km} km and then {km2} km
+    - since {month} my range has been getting worse and worse
+    - my {model} uses far more energy than advertised on the {road}
+    - is it normal that I only reach {km} km in {weather}
+    - the battery drains very fast when I drive on the {road}, something must be wrong
+    - I expected {km2} km of range but real world driving gives me {km} km
+    - my {model} cannot even do my {km} km commute any more
+  software_update_issue:
+    - after the latest update the {model} infotainment keeps rebooting
+    - the software update on my {model} got stuck at {percent}
+    - since the update the app cannot connect to my {model}
+    - the update to version {version} failed twice and the car shows {fault}
+    - navigation is broken since the last over the air update to {version}
+    - can I go back to the old software, the new version made the {feature} unusable
+    - the update notification will not go away even after installing {version}
+    - after updating to {version} the {feature} no longer works
+    - my {model} asks me to update but the download never finishes, it shows {fault}
+    - the new version {version} removed the {feature} I used every day
+  parts_order:
+    - I would like to order a new {accessory} for my {model}
+    - do you have the {accessory} in stock and how much is it
+    - where can I buy a replacement {accessory} for the {model}
+    - how long does delivery of a {accessory} take to {city}
+    - I need an extra {accessory}, how do I order it
+    - is the {accessory} for the {model} available as an accessory
+    - can I get a spare {accessory}, mine was lost
+    - please send me the price list for the {accessory} and other accessories
+    - I want to buy a second {accessory} for the {model}
+    - is the original {accessory} compatible with my {model}
+  out_of_scope:
+    - what is the weather going to be like in {city} on {day}
+    - can you recommend a good restaurant near {city}
+    - how do I reset the password of my online banking account
+    - tell me something funny about {animal}
+    - who won the football match on {day}
+    - I want to cancel my streaming subscription
+    - how many calories are in a {food}
+    - what is the capital of {country}
+    - can you help me write an email to my landlord about the heating
+    - my washing machine makes a strange noise, who can fix it
