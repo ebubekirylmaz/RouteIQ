@@ -115,6 +115,11 @@
             ],
             "title": "Data Source"
           },
+          "demo": {
+            "description": "True in the public demo: its data is reset regularly and sending texts is limited.",
+            "title": "Demo",
+            "type": "boolean"
+          },
           "domain": {
             "anyOf": [
               {
@@ -139,6 +144,11 @@
             },
             "title": "Labels",
             "type": "array"
+          },
+          "max_text_length": {
+            "description": "The longest text POST /route accepts here, in characters.",
+            "title": "Max Text Length",
+            "type": "integer"
           },
           "target_type": {
             "anyOf": [
@@ -177,7 +187,9 @@
           "tiers",
           "target_type",
           "data_source",
-          "examples"
+          "examples",
+          "demo",
+          "max_text_length"
         ],
         "title": "ConfigResponse",
         "type": "object"

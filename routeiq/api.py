@@ -1,5 +1,6 @@
+import asyncio
 import os
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from typing import Literal
@@ -7,6 +8,7 @@ from pathlib import Path
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Response
 
 from fastapi.responses import RedirectResponse
+from routeiq import demo as demo_module
 from routeiq.dashboard import SPAFiles, dashboard_dir, is_built
 from routeiq.cascade import route
 from routeiq.config import ROOT, load_config
@@ -27,11 +29,15 @@ MAX_BUCKETS = 1000
 DEFAULT_WINDOWS = {"hour": timedelta(hours=24), "day": timedelta(days=30)}
 
 
-def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=None, dashboard=None):
+def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=None, dashboard=None, demo=None):
+    """`demo` is the DemoSettings of the public demo. None reads ROUTEIQ_DEMO from the environment; False switches it off."""
+    demo = None if demo is False else (demo_module.settings_from_env() if demo is None else demo)
     config = None
     if tiers is None:
         config = load_config(os.getenv("ROUTEIQ_CONFIG", str(ROOT / "configs" / "clinc150.yaml")))
         mock_erp = mock_erp or (config.get("target") or {}).get("type") == "mock_erp"
+    if demo is not None and config is None:
+        raise ValueError("the public demo needs the configuration file; it cannot run on injected tiers")
 
     @asynccontextmanager
     async def lifespan(app):
@@ -40,15 +46,30 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
             app.state.labels = config["labels"]
             app.state.target = build_target(config)
             app.state.config = config
-            app.state.config_view = describe_config(config=config)
+            app.state.config_view = describe_config(config=config, demo=demo)
         else:
             app.state.tiers = tiers
             app.state.labels = labels
             app.state.target = target
             app.state.config = None
-            app.state.config_view = describe_config(labels=labels, tiers=tiers)
-        app.state.store = Store(db_path or os.getenv("ROUTEIQ_DB", str(ROOT / "routeiq.db")))
-        yield
+            app.state.config_view = describe_config(labels=labels, tiers=tiers, demo=demo)
+        store_path = db_path or (demo.db_path if demo else os.getenv("ROUTEIQ_DB", str(ROOT / "routeiq.db")))
+        app.state.db_path = str(store_path)
+        app.state.store = Store(store_path)
+        resets = None
+        if demo is not None:
+            # A clean start: whatever an earlier run left behind is replaced by the recorded decisions.
+            demo_module.reset_database(app)
+            resets = asyncio.create_task(
+                demo_module.run_resets(demo.reset_hours * 3600, lambda: demo_module.reset_database(app))
+            )
+        try:
+            yield
+        finally:
+            if resets is not None:
+                resets.cancel()
+                with suppress(asyncio.CancelledError):
+                    await resets
 
     app = FastAPI(
         title="RouteIQ",
@@ -56,6 +77,10 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
         # operationId = function name, so generated TypeScript clients get clean names
         generate_unique_id_function=lambda route: route.name,
     )
+    app.state.demo = demo
+    if demo is not None:
+        app.state.demo_guard = demo_module.DemoGuard(demo)
+        app.middleware("http")(app.state.demo_guard)
     if mock_erp:
         app.state.erp = mock_erp_module.MockErpStore()
         app.include_router(mock_erp_module.router)
@@ -123,6 +148,8 @@ def create_app(tiers=None, labels=None, db_path=None, mock_erp=False, target=Non
 
     @app.post("/route", response_model=RouteResponse)
     def route_request(req: RouteRequest, background: BackgroundTasks):
+        if demo is not None and len(req.text) > demo.max_text:
+            raise HTTPException(status_code=422, detail=f"this demo accepts texts of at most {demo.max_text} characters")
         result = route(req.text, app.state.labels, app.state.tiers)
         payload = asdict(result)
         payload["degraded"] = payload.pop("error") is not None

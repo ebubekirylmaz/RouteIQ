@@ -228,12 +228,22 @@ export interface components {
         ConfigResponse: {
             /** Data Source */
             data_source: ("public" | "synthetic" | "private") | null;
+            /**
+             * Demo
+             * @description True in the public demo: its data is reset regularly and sending texts is limited.
+             */
+            demo: boolean;
             /** Domain */
             domain: string | null;
             /** Examples */
             examples: string[];
             /** Labels */
             labels: components["schemas"]["LabelInfo"][];
+            /**
+             * Max Text Length
+             * @description The longest text POST /route accepts here, in characters.
+             */
+            max_text_length: number;
             /** Target Type */
             target_type: string | null;
             /** Task */

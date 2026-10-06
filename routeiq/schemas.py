@@ -4,8 +4,11 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+MAX_TEXT_LENGTH = 5000
+
+
 class RouteRequest(BaseModel):
-    text: str = Field(min_length=1, max_length=5000)
+    text: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
 
 
 class ReviewDecision(BaseModel):
@@ -68,6 +71,8 @@ class ConfigResponse(BaseModel):
     target_type: str | None
     data_source: Literal["public", "synthetic", "private"] | None
     examples: list[str]
+    demo: bool = Field(description="True in the public demo: its data is reset regularly and sending texts is limited.")
+    max_text_length: int = Field(description="The longest text POST /route accepts here, in characters.")
 
 class RouteResponse(BaseModel):
     label: str | None
