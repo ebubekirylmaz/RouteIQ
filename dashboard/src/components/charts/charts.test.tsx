@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import chartsSource from "./Charts.tsx?raw";
+import themeSource from "./theme.ts?raw";
 import { describe, expect, it } from "vitest";
 
 import { toChartPoints } from "../../lib/chartData";
@@ -114,8 +115,12 @@ describe("ChartTable", () => {
 
 describe("the tooltip", () => {
   it("is styled with the theme colours, not Recharts' white", () => {
-    const source = chartsSource;
-    expect(source).toContain('background: "var(--surface)"');
-    expect(source).not.toMatch(/background:\s*"#fff/i);
+    expect(themeSource).toContain('background: "var(--surface)"');
+    expect(themeSource).not.toMatch(/background:\s*"#fff/i);
+  });
+
+  it("is the themed one on every chart", () => {
+    expect(chartsSource).toContain('from "./theme"');
+    expect(chartsSource.match(/<Tooltip \{\.\.\.TOOLTIP\}/g)).toHaveLength(3);
   });
 });

@@ -1,6 +1,102 @@
 {
   "components": {
     "schemas": {
+      "CalibrationBin": {
+        "properties": {
+          "accuracy": {
+            "title": "Accuracy",
+            "type": "number"
+          },
+          "lower": {
+            "title": "Lower",
+            "type": "number"
+          },
+          "mean_confidence": {
+            "title": "Mean Confidence",
+            "type": "number"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "upper": {
+            "title": "Upper",
+            "type": "number"
+          }
+        },
+        "required": [
+          "lower",
+          "upper",
+          "n",
+          "mean_confidence",
+          "accuracy"
+        ],
+        "title": "CalibrationBin",
+        "type": "object"
+      },
+      "CascadeBreakdown": {
+        "properties": {
+          "escalated": {
+            "description": "Examples that needed more than one tier.",
+            "title": "Escalated",
+            "type": "integer"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/CascadeGroup"
+            },
+            "title": "Groups",
+            "type": "array"
+          }
+        },
+        "required": [
+          "groups",
+          "escalated"
+        ],
+        "title": "CascadeBreakdown",
+        "type": "object"
+      },
+      "CascadeGroup": {
+        "properties": {
+          "correct": {
+            "description": "How many of them got the true label. For human review: the model's suggestion.",
+            "title": "Correct",
+            "type": "integer"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "accepted",
+              "human_review"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The tier that accepted the examples. Null for the ones sent to a person.",
+            "title": "Tier"
+          }
+        },
+        "required": [
+          "kind",
+          "tier",
+          "count",
+          "correct"
+        ],
+        "title": "CascadeGroup",
+        "type": "object"
+      },
       "ConfigResponse": {
         "properties": {
           "data_source": {
@@ -125,6 +221,154 @@
           "detail"
         ],
         "title": "ErrorResponse",
+        "type": "object"
+      },
+      "EvaluationResponse": {
+        "description": "An offline measurement on labeled examples, not on live traffic.",
+        "properties": {
+          "calibration": {
+            "items": {
+              "$ref": "#/components/schemas/TierCalibration"
+            },
+            "title": "Calibration",
+            "type": "array"
+          },
+          "cascade": {
+            "$ref": "#/components/schemas/CascadeBreakdown"
+          },
+          "data_source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "public",
+                  "synthetic",
+                  "private"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Source"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "setups": {
+            "items": {
+              "$ref": "#/components/schemas/EvaluationSetup"
+            },
+            "title": "Setups",
+            "type": "array"
+          },
+          "split": {
+            "title": "Split",
+            "type": "string"
+          },
+          "tiers": {
+            "items": {
+              "$ref": "#/components/schemas/EvaluationTier"
+            },
+            "title": "Tiers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "domain",
+          "split",
+          "n",
+          "data_source",
+          "tiers",
+          "setups",
+          "cascade",
+          "calibration"
+        ],
+        "title": "EvaluationResponse",
+        "type": "object"
+      },
+      "EvaluationSetup": {
+        "properties": {
+          "accuracy": {
+            "title": "Accuracy",
+            "type": "number"
+          },
+          "accuracy_high": {
+            "description": "Upper end of the 95% (Wilson) interval of the accuracy.",
+            "title": "Accuracy High",
+            "type": "number"
+          },
+          "accuracy_low": {
+            "description": "Lower end of the 95% (Wilson) interval of the accuracy.",
+            "title": "Accuracy Low",
+            "type": "number"
+          },
+          "assumes_reviewer_always_right": {
+            "description": "True when the figure counts every request sent to a person as answered correctly.",
+            "title": "Assumes Reviewer Always Right",
+            "type": "boolean"
+          },
+          "cost_per_1k_usd": {
+            "title": "Cost Per 1K Usd",
+            "type": "number"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "macro_f1": {
+            "title": "Macro F1",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "p50_ms": {
+            "title": "P50 Ms",
+            "type": "number"
+          },
+          "p95_ms": {
+            "title": "P95 Ms",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "accuracy",
+          "accuracy_low",
+          "accuracy_high",
+          "macro_f1",
+          "cost_per_1k_usd",
+          "p50_ms",
+          "p95_ms",
+          "assumes_reviewer_always_right"
+        ],
+        "title": "EvaluationSetup",
+        "type": "object"
+      },
+      "EvaluationTier": {
+        "properties": {
+          "accept_threshold": {
+            "title": "Accept Threshold",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "accept_threshold"
+        ],
+        "title": "EvaluationTier",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -679,6 +923,33 @@
         "title": "StatsResponse",
         "type": "object"
       },
+      "TierCalibration": {
+        "properties": {
+          "bins": {
+            "items": {
+              "$ref": "#/components/schemas/CalibrationBin"
+            },
+            "title": "Bins",
+            "type": "array"
+          },
+          "ece": {
+            "description": "Expected calibration error: 0 means the confidence is what it claims to be.",
+            "title": "Ece",
+            "type": "number"
+          },
+          "tier": {
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tier",
+          "ece",
+          "bins"
+        ],
+        "title": "TierCalibration",
+        "type": "object"
+      },
       "TierInfo": {
         "properties": {
           "accept_threshold": {
@@ -913,6 +1184,35 @@
           }
         },
         "summary": "Retry Deliveries"
+      }
+    },
+    "/evaluation": {
+      "get": {
+        "description": "Accuracy, cost and calibration measured offline on labeled examples, not on live traffic.",
+        "operationId": "get_evaluation",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        },
+        "summary": "Get Evaluation"
       }
     },
     "/health": {

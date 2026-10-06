@@ -1,0 +1,7 @@
+.scroll {
+  overflow-x: auto;
+}
+
+.inner {
+  min-width: 520px;
+}

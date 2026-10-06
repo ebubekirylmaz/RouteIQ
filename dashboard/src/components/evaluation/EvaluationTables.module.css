@@ -1,0 +1,89 @@
+.section {
+  margin-top: 1.5rem;
+}
+
+.section h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+}
+
+.section h3 {
+  margin: 1rem 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.lead {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--border);
+  text-align: right;
+  vertical-align: top;
+}
+
+.table thead th {
+  border-top: 0;
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.table th:first-child,
+.table td:first-child {
+  min-width: 13rem;
+  text-align: left;
+}
+
+.table tbody th {
+  font-weight: 600;
+}
+
+.table tbody th small {
+  display: block;
+  max-width: 22rem;
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+
+.assumption {
+  color: var(--chart-warm);
+}
+
+.note {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.small {
+  color: var(--muted);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

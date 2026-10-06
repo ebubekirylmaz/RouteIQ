@@ -4,6 +4,7 @@ import { HttpResponse, http } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { App } from "./App";
+import { serveEvaluationApi } from "./test/evaluationServer";
 import { serveRequestsApi } from "./test/requestsServer";
 import { serveReviewApi } from "./test/reviewServer";
 import { server } from "./test/server";
@@ -15,6 +16,7 @@ import { renderWithProviders } from "./test/utils";
 beforeEach(() => {
   serveReviewApi([]);
   serveRequestsApi();
+  serveEvaluationApi();
   serveStatsApi();
   serveTimeseriesApi();
 });
@@ -31,6 +33,7 @@ describe("routing", () => {
     ["/review", "Review queue"],
     ["/overview", "Overview"],
     ["/charts", "Charts"],
+    ["/evaluation", "Evaluation"],
     ["/history", "History"],
     ["/try", "Try it"],
   ])("shows %s", async (route, title) => {
@@ -51,7 +54,7 @@ describe("navigation", () => {
     renderWithProviders(<App />, { route: "/review" });
     const nav = screen.getByRole("navigation", { name: "Main" });
     expect(nav).toHaveTextContent("Review queue");
-    for (const name of ["Review queue", "Overview", "Charts", "History", "Try it"]) {
+    for (const name of ["Review queue", "Overview", "Charts", "Evaluation", "History", "Try it"]) {
       expect(screen.getByRole("link", { name })).toBeInTheDocument();
     }
   });

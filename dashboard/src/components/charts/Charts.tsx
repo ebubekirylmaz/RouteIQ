@@ -13,24 +13,10 @@ import {
 
 import type { ChartPoint } from "../../lib/chartData";
 import { formatCost, formatCount, formatLatency, formatLatencyTick } from "../../lib/format";
+import { AXIS, GRID, TOOLTIP } from "./theme";
 
 const HEIGHT = 260;
-const GRID = "var(--border)";
-const AXIS = { fill: "var(--muted)", fontSize: 12 };
-
 const FRAME = { width: "100%", height: HEIGHT } as const;
-
-// Recharts draws its tooltip white, whatever the page looks like. These colours follow the theme.
-const TOOLTIP = {
-  contentStyle: {
-    background: "var(--surface)",
-    border: "1px solid var(--border)",
-    borderRadius: 8,
-    color: "var(--text)",
-  },
-  labelStyle: { color: "var(--text)", fontWeight: 600 },
-  itemStyle: { color: "var(--text)" },
-} as const;
 
 /** The tooltip names the full time, not the short axis label. */
 const titleOf = (_label: unknown, payload: readonly { payload?: ChartPoint }[]) => payload[0]?.payload?.title ?? "";

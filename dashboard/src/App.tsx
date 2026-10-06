@@ -12,6 +12,10 @@ import { TryItPage } from "./pages/TryItPage";
 // when somebody opens the screen, so the review queue stays quick to open.
 const ChartsPage = lazy(() => import("./pages/ChartsPage").then((module) => ({ default: module.ChartsPage })));
 
+const EvaluationPage = lazy(() =>
+  import("./pages/EvaluationPage").then((module) => ({ default: module.EvaluationPage })),
+);
+
 export function App() {
   return (
     <Routes>
@@ -30,6 +34,20 @@ export function App() {
               }
             >
               <ChartsPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="evaluation"
+          element={
+            <Suspense
+              fallback={
+                <p role="status" aria-label="Loading">
+                  Loading the evaluation…
+                </p>
+              }
+            >
+              <EvaluationPage />
             </Suspense>
           }
         />

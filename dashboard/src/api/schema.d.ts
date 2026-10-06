@@ -38,6 +38,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/evaluation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Evaluation
+         * @description Accuracy, cost and calibration measured offline on labeled examples, not on live traffic.
+         */
+        get: operations["get_evaluation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -161,6 +181,49 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** CalibrationBin */
+        CalibrationBin: {
+            /** Accuracy */
+            accuracy: number;
+            /** Lower */
+            lower: number;
+            /** Mean Confidence */
+            mean_confidence: number;
+            /** N */
+            n: number;
+            /** Upper */
+            upper: number;
+        };
+        /** CascadeBreakdown */
+        CascadeBreakdown: {
+            /**
+             * Escalated
+             * @description Examples that needed more than one tier.
+             */
+            escalated: number;
+            /** Groups */
+            groups: components["schemas"]["CascadeGroup"][];
+        };
+        /** CascadeGroup */
+        CascadeGroup: {
+            /**
+             * Correct
+             * @description How many of them got the true label. For human review: the model's suggestion.
+             */
+            correct: number;
+            /** Count */
+            count: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "accepted" | "human_review";
+            /**
+             * Tier
+             * @description The tier that accepted the examples. Null for the ones sent to a person.
+             */
+            tier: string | null;
+        };
         /** ConfigResponse */
         ConfigResponse: {
             /** Data Source */
@@ -193,6 +256,66 @@ export interface components {
         ErrorResponse: {
             /** Detail */
             detail: string;
+        };
+        /**
+         * EvaluationResponse
+         * @description An offline measurement on labeled examples, not on live traffic.
+         */
+        EvaluationResponse: {
+            /** Calibration */
+            calibration: components["schemas"]["TierCalibration"][];
+            cascade: components["schemas"]["CascadeBreakdown"];
+            /** Data Source */
+            data_source: ("public" | "synthetic" | "private") | null;
+            /** Domain */
+            domain: string;
+            /** N */
+            n: number;
+            /** Setups */
+            setups: components["schemas"]["EvaluationSetup"][];
+            /** Split */
+            split: string;
+            /** Tiers */
+            tiers: components["schemas"]["EvaluationTier"][];
+        };
+        /** EvaluationSetup */
+        EvaluationSetup: {
+            /** Accuracy */
+            accuracy: number;
+            /**
+             * Accuracy High
+             * @description Upper end of the 95% (Wilson) interval of the accuracy.
+             */
+            accuracy_high: number;
+            /**
+             * Accuracy Low
+             * @description Lower end of the 95% (Wilson) interval of the accuracy.
+             */
+            accuracy_low: number;
+            /**
+             * Assumes Reviewer Always Right
+             * @description True when the figure counts every request sent to a person as answered correctly.
+             */
+            assumes_reviewer_always_right: boolean;
+            /** Cost Per 1K Usd */
+            cost_per_1k_usd: number;
+            /** Description */
+            description: string;
+            /** Macro F1 */
+            macro_f1: number;
+            /** Name */
+            name: string;
+            /** P50 Ms */
+            p50_ms: number;
+            /** P95 Ms */
+            p95_ms: number;
+        };
+        /** EvaluationTier */
+        EvaluationTier: {
+            /** Accept Threshold */
+            accept_threshold: number;
+            /** Name */
+            name: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -368,6 +491,18 @@ export interface components {
             review: components["schemas"]["ReviewCounts"];
             reviewer_agreement: components["schemas"]["ReviewerAgreement"];
         };
+        /** TierCalibration */
+        TierCalibration: {
+            /** Bins */
+            bins: components["schemas"]["CalibrationBin"][];
+            /**
+             * Ece
+             * @description Expected calibration error: 0 means the confidence is what it claims to be.
+             */
+            ece: number;
+            /** Tier */
+            tier: string;
+        };
         /** TierInfo */
         TierInfo: {
             /** Accept Threshold */
@@ -495,6 +630,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_evaluation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

@@ -6,6 +6,8 @@ export type RequestItem = Schemas["RequestItem"];
 export type Stats = Schemas["StatsResponse"];
 export type Timeseries = Schemas["TimeseriesResponse"];
 export type RouteResult = Schemas["RouteResponse"];
+export type Evaluation = Schemas["EvaluationResponse"];
+export type EvaluationSetup = Schemas["EvaluationSetup"];
 export type RetryResult = Schemas["RetryResult"];
 export type ReviewResolved = Schemas["ReviewResolved"];
 
@@ -73,3 +75,8 @@ export const retryDeliveries = (limit = 100) =>
  */
 export const routeText = (text: string) =>
   apiPost<RouteResult>("/route", { text }).then((result) => result.data);
+
+/** Accuracy, cost and calibration measured offline on labeled examples. Rejects with ApiError 404 when there are none. */
+export const getEvaluation = (signal?: AbortSignal) =>
+  apiGet<Evaluation>("/evaluation", signal).then((result) => result.data);
+

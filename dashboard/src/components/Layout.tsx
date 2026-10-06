@@ -7,6 +7,7 @@ const NAV = [
   { to: "review", label: "Review queue" },
   { to: "overview", label: "Overview" },
   { to: "charts", label: "Charts" },
+  { to: "evaluation", label: "Evaluation" },
   { to: "history", label: "History" },
   { to: "try", label: "Try it" },
 ];

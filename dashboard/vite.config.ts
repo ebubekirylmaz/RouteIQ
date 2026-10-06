@@ -12,6 +12,7 @@ const API_PATHS = [
   "/stats",
   "/route",
   "/deliveries",
+  "/evaluation",
   "/health",
   "/openapi.json",
 ];
