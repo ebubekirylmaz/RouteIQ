@@ -163,6 +163,8 @@ export interface components {
     schemas: {
         /** ConfigResponse */
         ConfigResponse: {
+            /** Data Source */
+            data_source: ("public" | "synthetic" | "private") | null;
             /** Domain */
             domain: string | null;
             /** Labels */

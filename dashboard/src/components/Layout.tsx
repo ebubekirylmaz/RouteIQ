@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 
+import { useConfig } from "../hooks/useConfig";
 import styles from "./Layout.module.css";
 
 const NAV = [
@@ -11,6 +12,9 @@ const NAV = [
 ];
 
 export function Layout() {
+  const config = useConfig();
+  const synthetic = config.data?.data_source === "synthetic";
+
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
@@ -27,6 +31,13 @@ export function Layout() {
           ))}
         </nav>
       </header>
+
+      {synthetic && (
+        <p className={styles.banner} role="note">
+          <strong>Synthetic data.</strong> The configuration “{config.data?.domain}” was built from
+          generated text. Its accuracy says nothing about real data.
+        </p>
+      )}
 
       <main className={styles.main}>
         <Outlet />

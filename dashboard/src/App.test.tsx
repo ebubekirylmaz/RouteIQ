@@ -1,10 +1,12 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { HttpResponse, http } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { App } from "./App";
 import { serveRequestsApi } from "./test/requestsServer";
 import { serveReviewApi } from "./test/reviewServer";
+import { server } from "./test/server";
 import { serveStatsApi } from "./test/statsServer";
 import { serveTimeseriesApi } from "./test/timeseriesServer";
 import { renderWithProviders } from "./test/utils";
@@ -78,5 +80,40 @@ describe("layout", () => {
   it("shows the name of the product", () => {
     renderWithProviders(<App />, { route: "/review" });
     expect(screen.getByText("RouteIQ")).toBeInTheDocument();
+  });
+});
+
+describe("the note about synthetic data", () => {
+  const note = () => screen.queryByRole("note");
+
+  it("says so on every screen when the config uses synthetic data", async () => {
+    serveReviewApi([], undefined, { domain: "ev_after_sales", data_source: "synthetic" });
+    renderWithProviders(<App />, { route: "/overview" });
+
+    expect(await screen.findByRole("note")).toHaveTextContent(/Synthetic data/);
+    expect(note()).toHaveTextContent("ev_after_sales");
+    expect(note()).toHaveTextContent(/says nothing about real data/);
+
+    await userEvent.click(screen.getByRole("link", { name: "History" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "History" })).toBeInTheDocument();
+    expect(note()).toBeInTheDocument();
+  });
+
+  it.each([["public"], [null], ["private"]])("is not shown for data_source %s", async (source) => {
+    serveReviewApi([], undefined, { data_source: source as never });
+    renderWithProviders(<App />, { route: "/overview" });
+    await screen.findByRole("heading", { level: 1, name: "Overview" });
+    await waitFor(() => expect(note()).not.toBeInTheDocument());
+    // give the config request time to answer
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(note()).not.toBeInTheDocument();
+  });
+
+  it("is not shown, and nothing breaks, when the config cannot be loaded", async () => {
+    server.use(http.get("*/config", () => HttpResponse.json({ detail: "boom" }, { status: 500 })));
+    renderWithProviders(<App />, { route: "/overview" });
+    expect(await screen.findByRole("heading", { level: 1, name: "Overview" })).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(note()).not.toBeInTheDocument();
   });
 });

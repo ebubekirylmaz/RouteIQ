@@ -58,3 +58,12 @@
   color: var(--muted);
   font-size: 0.8rem;
 }
+
+.banner {
+  margin: 0;
+  padding: 0.5rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 0.9rem;
+}

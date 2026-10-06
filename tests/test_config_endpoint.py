@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from fakes import Fake
@@ -129,3 +130,40 @@ def test_endpoint_reads_the_real_config_and_hides_the_target_location(tmp_path, 
     assert body["target_type"] == "jsonl"
     assert "private" not in response.text
     assert "out.jsonl" not in response.text
+
+
+# --- data_source ---------------------------------------------------------------------------------
+
+def test_the_view_says_where_the_data_comes_from():
+    assert describe_config(config=config_with(data_source="synthetic")).data_source == "synthetic"
+    assert describe_config(config=config_with(data_source="public")).data_source == "public"
+
+
+def test_a_config_without_data_source_has_none_in_the_view():
+    assert describe_config(config=config_with()).data_source is None
+    assert describe_config(labels=["a"], tiers=[]).data_source is None
+
+
+def test_the_shipped_configs_say_where_their_data_comes_from():
+    sources = {
+        path.stem: describe_config(config=load_config(path)).data_source
+        for path in (ROOT / "configs").glob("*.yaml")
+    }
+    assert sources == {"clinc150": "public", "ev_after_sales": "synthetic"}
+
+
+@pytest.mark.parametrize("line, expected", [("data_source: synthetic\n", "synthetic"), ("", None)])
+def test_the_endpoint_returns_it(tmp_path, monkeypatch, line, expected):
+    config_file = tmp_path / "cfg.yaml"
+    config_file.write_text(
+        f"domain: demo\n{line}labels: [a, b]\n"
+        "tiers:\n  - name: baseline\n    model: sklearn_tfidf_logreg\n    accept_threshold: 0.5\n",
+        encoding="utf-8",
+    )
+    tiers = [({"name": "baseline", "accept_threshold": 0.5}, Fake("a", 0.9))]
+    monkeypatch.setenv("ROUTEIQ_CONFIG", str(config_file))
+    monkeypatch.setenv("ROUTEIQ_DB", str(tmp_path / "t.db"))
+    monkeypatch.setattr("routeiq.api.build_tiers", lambda config: tiers)
+
+    with TestClient(create_app()) as client:
+        assert client.get("/config").json()["data_source"] == expected

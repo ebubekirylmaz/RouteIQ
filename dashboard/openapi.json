@@ -3,6 +3,22 @@
     "schemas": {
       "ConfigResponse": {
         "properties": {
+          "data_source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "public",
+                  "synthetic",
+                  "private"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Source"
+          },
           "domain": {
             "anyOf": [
               {
@@ -56,7 +72,8 @@
           "task",
           "labels",
           "tiers",
-          "target_type"
+          "target_type",
+          "data_source"
         ],
         "title": "ConfigResponse",
         "type": "object"

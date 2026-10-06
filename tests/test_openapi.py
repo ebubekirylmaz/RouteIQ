@@ -183,7 +183,11 @@ def test_stats_response_matches_the_declared_shape(tmp_path, spec):
 
 def test_config_response_fields(spec):
     assert set(schema(spec, "ConfigResponse")["properties"]) == {
-        "domain", "task", "labels", "tiers", "target_type",
+        "domain", "task", "labels", "tiers", "target_type", "data_source",
+    }
+    data_source = schema(spec, "ConfigResponse")["properties"]["data_source"]
+    assert {"public", "synthetic", "private"} == {
+        value for option in data_source["anyOf"] for value in option.get("enum", [])
     }
     assert set(schema(spec, "LabelInfo")["properties"]) == {"name", "description"}
     assert set(schema(spec, "TierInfo")["properties"]) == {

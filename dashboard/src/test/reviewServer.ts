@@ -41,14 +41,20 @@ export type FakeApi = {
  * A small fake of the review part of the API: GET /config, GET /review (limit, offset,
  * X-Total-Count) and POST /review/{id}, which removes the request like the real API does.
  */
-export function serveReviewApi(initial: ReviewItem[] = [], labels = LABELS): FakeApi {
+export function serveReviewApi(
+  initial: ReviewItem[] = [],
+  labels = LABELS,
+  config: Partial<ConfigView> = {},
+): FakeApi {
   const api: FakeApi = { queue: [...initial], posts: [], reads: [], configReads: () => configCalls };
   let configCalls = 0;
 
   server.use(
     http.get("*/config", () => {
       configCalls += 1;
-      return HttpResponse.json({ domain: "demo", task: "support", labels, tiers: [], target_type: null });
+      return HttpResponse.json({
+        domain: "demo", task: "support", labels, tiers: [], target_type: null, data_source: null, ...config,
+      });
     }),
     http.get("*/review", ({ request }) => {
       const url = new URL(request.url);

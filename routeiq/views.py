@@ -40,6 +40,7 @@ def describe_config(config=None, labels=None, tiers=None):
                 for tier in config["tiers"]
             ],
             target_type=(config.get("target") or {}).get("type"),
+            data_source=config.get("data_source"),
         )
     return ConfigResponse(
         domain=None,
@@ -51,4 +52,5 @@ def describe_config(config=None, labels=None, tiers=None):
             for tier, _ in tiers or []
         ],
         target_type=None,
+        data_source=None,
     )
