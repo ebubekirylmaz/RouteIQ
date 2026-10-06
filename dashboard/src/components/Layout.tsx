@@ -15,6 +15,7 @@ const NAV = [
 export function Layout() {
   const config = useConfig();
   const synthetic = config.data?.data_source === "synthetic";
+  const demo = config.data?.demo === true;
 
   return (
     <div className={styles.shell}>
@@ -32,6 +33,13 @@ export function Layout() {
           ))}
         </nav>
       </header>
+
+      {demo && (
+        <p className={styles.banner} role="note">
+          <strong>Public demo.</strong> What you send is stored, can be seen by everyone using this demo, and is deleted when the demo
+          resets, about once a day. Please do not enter personal data. The number of texts that can be sent is limited.
+        </p>
+      )}
 
       {synthetic && (
         <p className={styles.banner} role="note">

@@ -40,10 +40,16 @@ export function describeRoute(result: RouteResult): RouteView {
   };
 }
 
-/** What to tell somebody whose text could not be routed. The API's own message is never shown. */
-export function describeRouteError(error: unknown): string {
-  if (error instanceof ApiError && error.status === 422) {
-    return `The text must have between 1 and ${MAX_TEXT_LENGTH.toLocaleString("en-US")} characters.`;
+/**
+ * What to tell somebody whose text could not be routed. The API's own message is never shown.
+ * `maxLength` is the limit of this service: the public demo accepts shorter texts.
+ */
+export function describeRouteError(error: unknown, maxLength: number = MAX_TEXT_LENGTH): string {
+  if (error instanceof ApiError && (error.status === 422 || error.status === 413)) {
+    return `The text must have between 1 and ${maxLength.toLocaleString("en-US")} characters.`;
+  }
+  if (error instanceof ApiError && error.status === 429) {
+    return "The demo limits how many texts can be sent. Please wait a little and try again.";
   }
   return "The text could not be routed. Try again, and if it keeps failing, check that the API is running.";
 }

@@ -80,6 +80,18 @@ describe("describeRouteError", () => {
     },
   );
 
+  it("names the limit of this service, which the demo makes smaller", () => {
+    expect(describeRouteError(new ApiError(422, "invalid request"), 500)).toBe("The text must have between 1 and 500 characters.");
+    expect(describeRouteError(new ApiError(413, "too big"), 500)).toBe("The text must have between 1 and 500 characters.");
+  });
+
+  it("says that a demo which is full has to be tried again later", () => {
+    const message = describeRouteError(new ApiError(429, "the demo has reached its daily limit"));
+    expect(message).toMatch(/limits how many texts/);
+    expect(message).toMatch(/try again/);
+    expect(message).not.toMatch(/daily limit of texts/);
+  });
+
   it("never shows the raw API message", () => {
     expect(describeRouteError(new ApiError(500, "Traceback (most recent call last)"))).not.toMatch(/Traceback/);
   });

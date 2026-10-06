@@ -45,7 +45,7 @@ export function serveConfig(examples: string[] = [], overrides: Record<string, u
     http.get("*/config", () =>
       HttpResponse.json({
         domain: "demo", task: "support", labels: [], tiers: [], target_type: null, data_source: null,
-        examples, ...overrides,
+        demo: false, max_text_length: 5000, examples, ...overrides,
       }),
     ),
   );

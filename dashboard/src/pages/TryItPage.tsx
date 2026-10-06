@@ -22,7 +22,10 @@ export function TryItPage() {
   const [text, setText] = useState("");
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const box = useRef<HTMLTextAreaElement>(null);
-  const examples = useConfig().data?.examples ?? [];
+  const config = useConfig().data;
+  const examples = config?.examples ?? [];
+  // The public demo accepts shorter texts than the API does.
+  const maxLength = config?.max_text_length ?? MAX_TEXT_LENGTH;
 
   const route = useRouteText((sent, result) =>
     setAttempts((previous) => [{ id: result.request_id, text: sent, result }, ...previous].slice(0, MAX_ATTEMPTS)),
@@ -65,7 +68,7 @@ export function TryItPage() {
           ref={box}
           rows={4}
           value={text}
-          maxLength={MAX_TEXT_LENGTH}
+          maxLength={maxLength}
           readOnly={route.isPending}
           placeholder="For example: my card got declined at the store"
           aria-describedby="try-count"
@@ -74,7 +77,7 @@ export function TryItPage() {
         />
         <div className={styles.row}>
           <span id="try-count" className={styles.count}>
-            {formatCount(text.length)} / {formatCount(MAX_TEXT_LENGTH)}
+            {formatCount(text.length)} / {formatCount(maxLength)}
           </span>
           <button type="submit" disabled={!canSubmit(text) || route.isPending}>
             {route.isPending ? "Routing…" : "Route it"}
@@ -96,7 +99,7 @@ export function TryItPage() {
 
       {route.isError && (
         <div className={styles.problem} role="alert">
-          {describeRouteError(route.error)}
+          {describeRouteError(route.error, maxLength)}
         </div>
       )}
 
