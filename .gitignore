@@ -7,6 +7,8 @@ __pycache__/
 *.joblib
 data/*.csv
 data/*.jsonl
+data/*/*.csv
+data/*/*.jsonl
 reports/
 scratch/
 dashboard/node_modules/

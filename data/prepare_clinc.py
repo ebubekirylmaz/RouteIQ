@@ -3,13 +3,14 @@ import yaml
 import pandas as pd
 from datasets import load_dataset
 
-DATA_DIR = Path(__file__).parent                  
 CONFIG_PATH = Path(__file__).parent.parent / "configs" / "clinc150.yaml"
 
 with open(CONFIG_PATH) as f:
     config = yaml.safe_load(f)
 
 wanted_labels = set(config["labels"])
+OUT_DIR = Path(__file__).parent / config["domain"]
+OUT_DIR.mkdir(exist_ok=True)
 
 ds = load_dataset("clinc/clinc_oos", "plus")
 names = ds["train"].features["intent"].names
@@ -32,9 +33,9 @@ rest_df = test_df[test_df["label"] != "out_of_scope"]
 oos_sample = oos_df.sample(n=150, random_state=42)
 test_df = pd.concat([rest_df, oos_sample])
 
-train_df.to_csv(DATA_DIR / "train.csv", index=False)
-val_df.to_csv(DATA_DIR / "val.csv", index=False)
-test_df.to_csv(DATA_DIR / "test.csv", index=False)
+train_df.to_csv(OUT_DIR / "train.csv", index=False)
+val_df.to_csv(OUT_DIR / "val.csv", index=False)
+test_df.to_csv(OUT_DIR / "test.csv", index=False)
 
 print("--- train")
 print(train_df["label"].value_counts())

@@ -225,3 +225,26 @@ def test_label_descriptions_must_be_a_mapping(value):
 @pytest.mark.parametrize("task", ["", 3, ["x"]])
 def test_invalid_task_is_reported(task):
     assert "'task'" in errors_of(config(task=task))
+
+
+# --- data_source and the shipped configs -----------------------------------------------------------------
+
+@pytest.mark.parametrize("source", ["public", "synthetic", "private"])
+def test_the_known_data_sources_are_accepted(source):
+    validate_config(config(data_source=source))
+
+
+@pytest.mark.parametrize("source", ["real", "", None, 1, ["public"]])
+def test_an_unknown_data_source_is_refused(source):
+    assert "'data_source' must be one of: public, synthetic, private" in errors_of(config(data_source=source))
+
+
+def test_a_config_without_data_source_is_still_valid():
+    validate_config(config())
+
+
+@pytest.mark.parametrize("path", sorted((ROOT / "configs").glob("*.yaml")), ids=lambda p: p.name)
+def test_every_shipped_config_is_valid_and_says_where_its_data_comes_from(path):
+    loaded = load_config(path)
+    assert loaded["data_source"] in ("public", "synthetic", "private")
+    assert loaded["domain"] == path.stem

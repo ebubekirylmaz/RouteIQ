@@ -4,6 +4,7 @@ import yaml
 
 ROOT = Path(__file__).parent.parent
 MODELS_DIR = ROOT / "models"
+DATA_DIR = ROOT / "data"
 
 
 class ConfigError(ValueError):
@@ -24,6 +25,7 @@ TARGET_KEYS = {
     "mock_erp": {"type", "url"},
 }
 TARGET_REQUIRED = {"jsonl": "path", "webhook": "url", "mock_erp": "url"}
+DATA_SOURCES = ("public", "synthetic", "private")
 TOP_KEYS = {"domain", "data_source", "labels", "task", "label_descriptions", "tiers", "target"}
 
 
@@ -116,6 +118,9 @@ def validate_config(config):
     elif len(set(labels)) != len(labels):
         errors.append("'labels' contains duplicates")
 
+    if "data_source" in config and config["data_source"] not in DATA_SOURCES:
+        errors.append(f"'data_source' must be one of: {', '.join(DATA_SOURCES)}")
+
     if "task" in config and not _is_text(config["task"]):
         errors.append("'task' must be a non-empty string")
 
@@ -161,3 +166,8 @@ def load_config(path):
 
 def model_path(config, tier_name):
     return MODELS_DIR / f"{config['domain']}_{tier_name}.joblib"
+
+
+def data_path(config, split):
+    """Where the labeled file of a split lives: data/<domain>/<split>.csv."""
+    return DATA_DIR / config["domain"] / f"{split}.csv"

@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 
 from sklearn.metrics import f1_score
-from routeiq.config import ROOT, load_config
+from routeiq.config import ROOT, data_path, load_config
 from routeiq.models.registry import build_tiers
 
 
@@ -153,7 +153,7 @@ def main():
 
     config = load_config(args.config)
     labels = config["labels"]
-    df = pd.read_csv(ROOT / "data" / f"{args.split}.csv")
+    df = pd.read_csv(data_path(config, args.split))
 
     tiers = build_tiers(config)
     tier_preds = [
