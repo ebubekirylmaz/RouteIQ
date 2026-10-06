@@ -1,0 +1,301 @@
+text,true,baseline_label,baseline_confidence,baseline_cost_usd,baseline_latency_ms,llm_label,llm_confidence,llm_cost_usd,llm_latency_ms
+can you freeze my bank account,freeze_account,freeze_account,0.881108406436029,0.0,6.948000052943826,freeze_account,0.9999392069583942,1.662e-05,2325.8809589315206
+i want to freeze my bank account,freeze_account,freeze_account,0.8574447814956969,0.0,0.3211670555174351,freeze_account,0.9999697217572346,1.159e-05,1852.8112079948187
+i want my account locked out,freeze_account,freeze_account,0.6562590958750067,0.0,0.2837080974131822,freeze_account,0.9998389741816224,1.15e-05,593.9161248970777
+stop all access to my account,freeze_account,freeze_account,0.5956184190853353,0.0,0.2600830048322677,freeze_account,0.999952437756,1.15e-05,573.7148749176413
+i need my account frozen!,freeze_account,freeze_account,0.7357471509590916,0.0,0.2360830549150705,freeze_account,0.9999439747713518,1.15e-05,742.9607920348644
+i need to lock my account right now!,freeze_account,freeze_account,0.6239127852698012,0.0,0.2377079799771309,freeze_account,0.9999486234366108,1.177e-05,562.9915420431644
+please force my account to freeze,freeze_account,freeze_account,0.7459560567454262,0.0,0.2287500537931919,freeze_account,0.9998728198669932,1.15e-05,870.1254168991
+please stop my account,freeze_account,freeze_account,0.8284758984229168,0.0,0.2285409718751907,freeze_account,0.9995251765519372,1.132e-05,1331.4837499056011
+please allow my account to freeze,freeze_account,freeze_account,0.6775124143743648,0.0,0.2263339702039957,freeze_account,0.9980584007209972,1.15e-05,570.2123751398176
+please put my account on hold,freeze_account,freeze_account,0.7709875294533304,0.0,0.2243339549750089,freeze_account,0.9997965511486372,1.15e-05,658.1307919695973
+freeze my account at the bank immediately,freeze_account,freeze_account,0.7127578189087136,0.0,0.2257090527564287,freeze_account,0.9999594704850788,1.168e-05,4400.228125043213
+would you be able to freeze my bank account,freeze_account,freeze_account,0.6888886267325046,0.0,0.2302499487996101,freeze_account,0.9998599487008676,1.177e-05,1929.2915419209749
+my account at the bank needs to be frozen,freeze_account,freeze_account,0.4295531238329861,0.0,0.2363750245422125,freeze_account,0.9999543449247886,1.177e-05,4199.521791888401
+please block my discover account immediately,freeze_account,freeze_account,0.5562559889017963,0.0,0.2380840014666319,freeze_account,0.9996691844880348,1.15e-05,1438.2899168413132
+please put a block on my citi account immediately,freeze_account,freeze_account,0.8186815330381667,0.0,0.224374933168292,freeze_account,0.9997730770205004,1.186e-05,594.485207926482
+block my american saving bank for now,freeze_account,out_of_scope,0.3292437773222087,0.0,0.2236668951809406,freeze_account,0.9984606394943856,1.159e-05,579.6699170023203
+block my bank of america immdediately,freeze_account,freeze_account,0.4050383455247301,0.0,0.2222501207143068,freeze_account,0.99878066625035,1.186e-05,2071.583874989301
+put a block on bank of amerian immediately,freeze_account,freeze_account,0.4960132827348623,0.0,0.2226249780505895,freeze_account,0.988954877226102,1.177e-05,4451.327542075887
+my account needs to be frozen,freeze_account,freeze_account,0.4442940649030745,0.0,0.2216249704360962,freeze_account,0.9999270492388316,1.15e-05,607.7126669697464
+freeze my account for me,freeze_account,freeze_account,0.6482575640407765,0.0,0.2262499183416366,freeze_account,0.9999567288990748,1.086e-05,569.0254168584943
+put a freeze on my account,freeze_account,freeze_account,0.8069886298338271,0.0,0.2246249932795763,freeze_account,0.9999648344963598,1.15e-05,601.613458013162
+could you please put a stop on my bank account,freeze_account,freeze_account,0.9241720187292708,0.0,0.2295831218361854,freeze_account,0.99983813998226,1.186e-05,592.0034588780254
+i need to put a stop on my bank account,freeze_account,freeze_account,0.922775530857913,0.0,0.2298338804394006,freeze_account,0.9997316127327818,1.122e-05,2068.7148747965693
+are you able to put a stop on my bank account,freeze_account,freeze_account,0.7510806310321183,0.0,0.2399580553174018,freeze_account,0.9989289799947498,1.195e-05,618.0538749322295
+please put a stop on my bank account,freeze_account,freeze_account,0.9559649533541014,0.0,0.2374998293817043,freeze_account,0.9997643787626572,1.104e-05,785.4295410215855
+i am hoping you can put a stop on my bank account,freeze_account,freeze_account,0.9280355719649156,0.0,0.23145810700953,freeze_account,0.999335254336572,1.204e-05,1893.2154590729624
+please put a freeze on my banking account,freeze_account,freeze_account,0.6818380894957679,0.0,0.2322499640285968,freeze_account,0.99996638410926,1.104e-05,608.658165903762
+i need my bank account frozen,freeze_account,freeze_account,0.8460118140049783,0.0,0.2267500385642051,freeze_account,0.9999570864969812,1.086e-05,575.7168750278652
+how do i freeze my bank account,freeze_account,freeze_account,0.8378788393791835,0.0,0.2264168579131364,freeze_account,0.9999282411581684,1.159e-05,3134.723792085424
+would you freeze my bank account,freeze_account,freeze_account,0.8386903451943929,0.0,0.2261670306324958,freeze_account,0.9997977427523806,1.15e-05,3494.0789171960205
+i need to tell you about my lost card,report_lost_card,report_lost_card,0.5367008635747367,0.0,0.2287079114466905,report_lost_card,0.9992853643383548,1.143e-05,866.7147080413997
+"i lost my card, what do i do next",report_lost_card,report_lost_card,0.5759179327998702,0.0,0.2486668527126312,report_lost_card,0.9997069474594724,1.216e-05,668.9691659994423
+"i have lost my card, what am i supposed to do",report_lost_card,report_lost_card,0.5837284981208929,0.0,0.2445830032229423,report_lost_card,0.9995513732185388,1.234e-05,562.0840000919998
+where do i report that my card was lost,report_lost_card,report_lost_card,0.4791937690527059,0.0,0.2538750413805246,report_lost_card,0.9985741267865632,1.207e-05,587.5007500872016
+who do i speak with about my card that was lost,report_lost_card,report_lost_card,0.3179334089495977,0.0,0.2385829575359821,report_lost_card,0.998908504439417,1.225e-05,8621.161457849666
+please help me report my lost card,report_lost_card,report_lost_card,0.7429754869475257,0.0,0.2313749864697456,report_lost_card,0.9996752551718282,1.189e-05,598.195374943316
+set up a report for a lost card,report_lost_card,report_lost_card,0.4529163382904712,0.0,0.2317498438060283,report_lost_card,0.9983919227854378,1.198e-05,804.3315419927239
+can you report a lost card for me,report_lost_card,report_lost_card,0.5275700767010723,0.0,0.2335000317543745,report_lost_card,0.9987738625262198,1.198e-05,609.7220832016319
+i lost my card and need to report it,report_lost_card,report_lost_card,0.7303822864111865,0.0,0.2330001443624496,report_lost_card,0.9997095685140536,1.143e-05,825.1786248292774
+what is the process for reporting my card as lost,report_lost_card,report_lost_card,0.4017560655923339,0.0,0.232083024457097,report_lost_card,0.9993808469236816,1.216e-05,646.7982921749353
+someone used my chase card without my authorization,report_lost_card,report_fraud,0.2966698239057245,0.0,0.2293749712407589,report_fraud,0.9994663944656672,1.207e-05,618.2737089693546
+can you tell me how to report a card lost,report_lost_card,out_of_scope,0.3594047727573668,0.0,0.229208031669259,report_lost_card,0.9980317769638694,1.216e-05,597.5511251017451
+please tell me how to go about reporting a lost card,report_lost_card,out_of_scope,0.34069796716954,0.0,0.240083085373044,report_lost_card,0.9989149289055688,1.225e-05,675.6334169767797
+search steps for how to report a card lost,report_lost_card,report_lost_card,0.4563614023250246,0.0,0.2311659045517444,out_of_scope,0.562126175308726,1.177e-05,609.0945000760257
+i need to to know how to report a lost card,report_lost_card,report_lost_card,0.6329849602503963,0.0,0.2353750169277191,report_lost_card,0.9932577239712996,1.161e-05,587.8933330532163
+my bank of america visa platinum was swiped from my belongings,report_lost_card,out_of_scope,0.2811112766872771,0.0,0.2389578148722648,report_lost_card,0.9985875667070696,1.243e-05,597.2724170424044
+who do i call to report my card as lost,report_lost_card,report_lost_card,0.8396354625051714,0.0,0.2405839040875435,report_lost_card,0.9989079120363326,1.152e-05,591.4529578294605
+what should i do if i need to report my card lost,report_lost_card,report_lost_card,0.725133918488829,0.0,0.2348751295357942,report_lost_card,0.9995528036419958,1.234e-05,673.5859580803663
+my capital one visa was taken without permission,report_lost_card,out_of_scope,0.3693947531688339,0.0,0.2296660095453262,report_fraud,0.9971966652677996,1.198e-05,592.560209101066
+i need to report that someone ran off with my td bank card earlier,report_lost_card,damaged_card,0.3364645845877574,0.0,0.2322078216820955,report_fraud,0.7271209132317722,1.188e-05,872.9054171126336
+what steps do i need to take to report a card lost,report_lost_card,report_lost_card,0.5020837831218488,0.0,0.2305828966200351,report_lost_card,0.9995099255226284,1.234e-05,591.3637920748442
+i would like to report my american express card stolen,report_lost_card,report_lost_card,0.6684983400343512,0.0,0.2322499640285968,report_lost_card,0.9970232998365752,1.216e-05,574.5472500566393
+how do i report that i lost my card,report_lost_card,report_lost_card,0.6184640940058453,0.0,0.2272080164402723,report_lost_card,0.9994428811745578,1.143e-05,598.5569581389427
+how do i report that i actually lost my card,report_lost_card,report_lost_card,0.6694685352324797,0.0,0.2297919709235429,report_lost_card,0.9993156015533288,1.152e-05,587.4706669710577
+how do i report that i lost the card,report_lost_card,report_lost_card,0.3625463556161875,0.0,0.230208970606327,report_lost_card,0.9993169113136195,1.143e-05,591.7160420212895
+how do i report my very lost card,report_lost_card,report_lost_card,0.7292803548430844,0.0,0.237833010032773,report_lost_card,0.998848204467942,1.134e-05,695.6445421092212
+how do i report the card as lost,report_lost_card,report_lost_card,0.5900404148276392,0.0,0.2312909346073866,report_lost_card,0.9995162390131944,1.134e-05,1897.9018749669192
+"lost report card, need new one",report_lost_card,report_lost_card,0.3942351276770663,0.0,0.2301661297678947,report_lost_card,0.9996918175307448,1.189e-05,599.2812500335276
+my report card was stolen,report_lost_card,report_lost_card,0.7033825206626548,0.0,0.2260829787701368,report_lost_card,0.9946820565695974,1.171e-05,600.3886668477207
+my report card was lost help!,report_lost_card,report_lost_card,0.6903177657182479,0.0,0.2241670154035091,report_lost_card,0.9989020817352756,1.125e-05,648.0834169778973
+tell me how to go about reporting a damaged card,damaged_card,out_of_scope,0.4017919311953705,0.0,0.2290830016136169,damaged_card,0.9996015229731628,1.195e-05,603.2744168769568
+my card is damaged,damaged_card,damaged_card,0.824937899255105,0.0,0.226916978135705,damaged_card,0.9999839070045524,1.132e-05,551.1932920198888
+i want to report a damaged card,damaged_card,damaged_card,0.57635260711261,0.0,0.2297079190611839,damaged_card,0.9999737746439784,1.095e-05,603.1102910637856
+where should i report a damaged card,damaged_card,damaged_card,0.3829514704132226,0.0,0.2259591128677129,damaged_card,0.9979838333366092,1.159e-05,764.8747498169541
+can you find out how to report a damaged card,damaged_card,damaged_card,0.3735850214994422,0.0,0.2270839177072048,damaged_card,0.8353498170189317,1.186e-05,599.3856249842793
+my card has become too frayed and torn to use,damaged_card,damaged_card,0.427460286352711,0.0,0.2307500690221786,damaged_card,0.9999753242852848,1.195e-05,570.0028338469565
+what do i do about a card that's too messed up to be properly scanned,damaged_card,out_of_scope,0.3870494792362287,0.0,0.246250070631504,damaged_card,0.9999666225125772,1.24e-05,556.6607909277081
+my card became damaged when i dropped it in the parking lot and it got ran over,damaged_card,damaged_card,0.6030549412975008,0.0,0.2357917837798595,damaged_card,0.9999825957461574,1.249e-05,563.0902501288801
+i have a damaged card that needs replaced because my son dropped it in a blender,damaged_card,damaged_card,0.4500089824707854,0.0,0.2326250541955232,damaged_card,0.9999740130508764,1.249e-05,8494.800582993776
+i sat on my credit card and broke it in half and need it replaced,damaged_card,damaged_card,0.6607707083520286,0.0,0.2331668511033058,damaged_card,0.9999816421070834,1.231e-05,606.8388330750167
+my credit card got torn and i need a new one,damaged_card,damaged_card,0.6335836564529629,0.0,0.2261667978018522,damaged_card,0.9999822381318528,1.195e-05,641.2324591074139
+what do i do with a damaged credit card,damaged_card,damaged_card,0.4001892668700782,0.0,0.227333977818489,damaged_card,0.9999824765407688,1.113e-05,568.6659999191761
+how do i replace a damaged card,damaged_card,damaged_card,0.4316923910088834,0.0,0.2264580689370632,damaged_card,0.9999187058723578,1.095e-05,564.5338329486549
+i have a card that needs replaced because my wine dumped wine on it,damaged_card,damaged_card,0.2828424783783247,0.0,0.2306669484823942,damaged_card,0.9999343199921672,1.158e-05,662.1949169784784
+i spilled wine on my credit card and now its all mushy and needs to be replaced,damaged_card,damaged_card,0.2849919663842164,0.0,0.2312501892447471,damaged_card,0.9999755626925522,1.258e-05,1961.106166942045
+my dog swallowed my credit card and i need a new one,damaged_card,damaged_card,0.6373415148456435,0.0,0.2280408516526222,damaged_card,0.8123686462615338,1.204e-05,569.4409999996424
+i want to report a damaged card that my cat shredded with its claws,damaged_card,damaged_card,0.4949373472303243,0.0,0.2367908600717783,damaged_card,0.9999654305001976,1.167e-05,602.6460840366781
+i need to replace a card that my daughter spilled juice on,damaged_card,damaged_card,0.3137407719568446,0.0,0.2415410708636045,damaged_card,0.9999781851762466,1.14e-05,541.8558330275118
+i'm unable to use my card because it's been ruined,damaged_card,damaged_card,0.4917444003073081,0.0,0.2360418438911438,damaged_card,0.9999771123402672,1.204e-05,595.1684999745339
+i can't use my card because it’s damaged badly,damaged_card,damaged_card,0.676773765944211,0.0,0.235582934692502,damaged_card,0.9999752050825816,1.195e-05,569.5213340222836
+i cannot use my card cuz it's damaged,damaged_card,damaged_card,0.652408625790438,0.0,0.2271248959004879,damaged_card,0.9999741322534376,1.186e-05,584.3607499264181
+i can't use my card because it’s messed up,damaged_card,damaged_card,0.6342798536114825,0.0,0.2302918583154678,damaged_card,0.999532679650347,1.131e-05,651.4472919516265
+i can't use my card because it’s broken,damaged_card,damaged_card,0.6616414940101912,0.0,0.2293749712407589,damaged_card,0.9999730594272632,1.122e-05,611.031417036429
+i can't use my card because i damaged it,damaged_card,damaged_card,0.7140883485638635,0.0,0.2327908296138048,damaged_card,0.9999723442092404,1.122e-05,1923.8122499082235
+who should i talk to about the fact that i inadvertently split my card almost in half,damaged_card,damaged_card,0.4350670921357045,0.0,0.2335829194635152,damaged_card,0.9999691257472012,1.249e-05,567.8764169570059
+i accidentally deactivated the magnetic stripe on my visa debit card and i need to report it,damaged_card,damaged_card,0.4489797264197861,0.0,0.2399161458015442,damaged_card,0.91391188459947,1.258e-05,622.480166843161
+can i talk to someone to let them know my card was damaged from being melted on a radiator,damaged_card,damaged_card,0.3262588430918038,0.0,0.2347500994801521,damaged_card,0.9999774699527388,1.276e-05,554.6642921399325
+i would like to report a damaged card that was burnt,damaged_card,damaged_card,0.3510849784116663,0.0,0.2344998065382242,damaged_card,0.999985933501902,1.131e-05,1960.6231248471888
+i would like to report my card damaged since i accidentally spilled gorilla glue all over it and the numbers are now obscured,damaged_card,damaged_card,0.4903339804285446,0.0,0.2392500173300504,damaged_card,0.9999767547297423,1.248e-05,613.8035000767559
+my visa has been damaged,damaged_card,damaged_card,0.2675577654006347,0.0,0.2256669104099273,damaged_card,0.9999816421070834,1.141e-05,552.1797088440508
+i want to report fraudulent activity on my navy federal card,report_fraud,report_fraud,0.7884677898944227,0.0,0.2360420767217874,report_fraud,0.999798328392322,1.17e-05,582.204916048795
+i would like to report fraudulent activity on my chase card,report_fraud,report_fraud,0.8155588709157087,0.0,0.2286669332534074,report_fraud,0.999782717298064,1.17e-05,803.5550829954445
+i need to report fraudulent activity on my usaa card,report_fraud,report_fraud,0.9328698990358144,0.0,0.2281251363456249,report_fraud,0.999797613353832,1.17e-05,591.2518750410527
+i have to report fraudulent activity on my bank of the west card,report_fraud,report_fraud,0.7963128868050121,0.0,0.2329580020159483,report_fraud,0.9997273054109987,1.252e-05,570.0819999910891
+i have to report fraudulent activity the bank of america card,report_fraud,report_fraud,0.555235265393425,0.0,0.2269998658448457,report_fraud,0.999672374526953,1.179e-05,573.5275829210877
+i seem to have a purchase that i didn't make from olive garden on my account,report_fraud,report_fraud,0.4823885790391887,0.0,0.2315421588718891,report_fraud,0.999714912557297,1.279e-05,846.2439170107245
+my online bill has some items that i didn't purchase from penneys,report_fraud,out_of_scope,0.3825934280491453,0.0,0.2338329795747995,report_fraud,0.998884605693702,1.252e-05,634.9302080925554
+my account shows a transaction that i didn't make from foot locker,report_fraud,report_fraud,0.4656985753435021,0.0,0.2299998886883258,report_fraud,0.9996576045679249,1.243e-05,630.7091249618679
+my bill shows a purchase from payless shoes but i didn't buy anything,report_fraud,out_of_scope,0.4156285314868341,0.0,0.2359999343752861,report_fraud,0.9985776145758424,1.261e-05,646.6502910479903
+i have some charges on my account from old navy that aren't mine,report_fraud,report_fraud,0.5291363191933746,0.0,0.2262918278574943,report_fraud,0.9997155133220496,1.252e-05,2026.9989168737084
+this charge is bs,report_fraud,out_of_scope,0.4629490024856343,0.0,0.2235409338027238,report_fraud,0.9818453162615468,1.162e-05,586.0367082059383
+i have a bogus transaction from amazon on my account,report_fraud,report_fraud,0.7010412192829902,0.0,0.2263339702039957,report_fraud,0.9997717534613028,1.17e-05,775.2817501313984
+i have a fraudulent buy from dave's video on my account,report_fraud,report_fraud,0.5788151067781093,0.0,0.2400409430265426,report_fraud,0.9997976153434036,1.188e-05,4651.711917016655
+i have a crap transaction from guitar center on my account,report_fraud,report_fraud,0.7492854871550467,0.0,0.226957956328988,report_fraud,0.9988656868660044,1.17e-05,608.9171669445932
+i think this transaction is bogus,report_fraud,report_fraud,0.4851681150978804,0.0,0.22724992595613,report_fraud,0.9995314629085974,1.189e-05,574.3931659962982
+i don't remember buying this,report_fraud,out_of_scope,0.4990544382267214,0.0,0.2264161594212055,report_fraud,0.999312773955799,1.18e-05,624.1404169704765
+i have a bs transaction from ebay on my account,report_fraud,report_fraud,0.7492854871550467,0.0,0.2341670915484428,report_fraud,0.9994673504967528,1.161e-05,593.4362499974668
+i've got a fraudulent purchase from kayak on my account,report_fraud,report_fraud,0.6440086642110217,0.0,0.229167053475976,report_fraud,0.999843973772612,1.243e-05,562.6324999611825
+do i have a fraudulent transaction on my account,report_fraud,report_fraud,0.8320064355007369,0.0,0.233708880841732,report_fraud,0.9996683366978816,1.216e-05,781.94170887582
+i'm pretty sure i have a fraudulent transaction on my account,report_fraud,report_fraud,0.8395045967059237,0.0,0.234000151976943,report_fraud,0.9997672285897204,1.243e-05,776.1840419843793
+there's a false charge on my account from mcdonald's,report_fraud,report_fraud,0.6036201214106447,0.0,0.2259591128677129,report_fraud,0.9996157821966086,1.252e-05,614.302999805659
+i think there's a fraudulent charge from mcdonald's on my account,report_fraud,report_fraud,0.8599280391529088,0.0,0.2269581891596317,report_fraud,0.9999008253394488,1.279e-05,598.6632921267301
+i think someone jacked my bank account,report_fraud,freeze_account,0.6006117466069065,0.0,0.2249160315841436,report_fraud,0.9985004509546116,1.198e-05,627.3930838797241
+i saw suspicious activity on my bank account,report_fraud,freeze_account,0.481858017323279,0.0,0.230208970606327,report_fraud,0.9997211154932956,1.198e-05,591.1850000265986
+someone else used my account to buy stuff from mcdonald's,report_fraud,report_fraud,0.2803159859143787,0.0,0.2295419108122587,report_fraud,0.999430423415243,1.261e-05,1899.9180840328336
+there's a messed up transaction on my account from mcdonald's,report_fraud,report_fraud,0.6395909027784771,0.0,0.2317919861525297,report_fraud,0.9970131646454252,1.197e-05,1932.316957972944
+i saw a fraudulent transaction,report_fraud,report_fraud,0.9027600475347978,0.0,0.2257090527564287,report_fraud,0.9998188281378576,1.18e-05,567.9415410850197
+i have a false charge on my account from mcdonald's,report_fraud,report_fraud,0.5927290417259617,0.0,0.226625008508563,report_fraud,0.9996908435089136,1.188e-05,588.5764579288661
+who do i contact to report fraud on my visa,report_fraud,report_fraud,0.5393816906711303,0.0,0.2254170831292867,report_fraud,0.9961765754475864,1.152e-05,593.1938330177218
+there has been unauthorized use of my visa,report_fraud,out_of_scope,0.3496463626960668,0.0,0.2304590307176113,report_fraud,0.9992927500124856,1.198e-05,578.6928329616785
+my card got declined; why,card_declined,card_declined,0.8414378442298168,0.0,0.2320411149412393,card_declined,0.999554594142374,1.18e-05,595.8832080941647
+can you help me understand why my card got declined,card_declined,card_declined,0.6332214757780907,0.0,0.229167053475976,card_declined,0.999570911546744,1.216e-05,610.0600829813629
+why was my card not accepted,card_declined,card_declined,0.7432004628988411,0.0,0.2294168807566166,card_declined,0.9990688895232404,1.18e-05,1933.85300016962
+can you tell me why my card got declined,card_declined,card_declined,0.8084726426857125,0.0,0.2306250389665365,card_declined,0.9995458997053632,1.143e-05,570.3773749992251
+i was at publix trying to buy some food but my card wouldnt work,card_declined,card_declined,0.7112308942453095,0.0,0.2276659943163395,card_declined,0.9995830606015058,1.27e-05,655.970917083323
+who do i need to contact to find out why my card got declined,card_declined,card_declined,0.5473789805464959,0.0,0.2298331819474697,card_declined,0.998811229290247,1.188e-05,567.35416688025
+i need to know why my card got declined,card_declined,card_declined,0.8611614746888425,0.0,0.2256250008940696,card_declined,0.9995905645999024,1.143e-05,647.7317088283598
+"how do i fix my card, it was declined",card_declined,card_declined,0.4127913715658032,0.0,0.225708819925785,card_declined,0.9986108791195002,1.152e-05,607.1448340080678
+why did my card get declined at public when i was trying to buy food,card_declined,card_declined,0.9168531648052376,0.0,0.2391249872744083,card_declined,0.9993615652631812,1.261e-05,826.2170830275863
+i was trying to buy food at publix but my card got declined,card_declined,card_declined,0.8856263277024168,0.0,0.2284999936819076,card_declined,0.9998763952461884,1.252e-05,4273.035249905661
+i was trying to use my card to get food at publix but it got declined,card_declined,card_declined,0.658706429665441,0.0,0.2393340691924095,card_declined,0.9998846187221476,1.215e-05,967.2914578113704
+how can i fix my card being declined,card_declined,card_declined,0.3279402788935511,0.0,0.2262499183416366,card_declined,0.999390616032677,1.198e-05,612.3276250436902
+"i was trying to get food at publix, why was my card declined",card_declined,card_declined,0.8973393869904683,0.0,0.2286669332534074,card_declined,0.9998131147615048,1.197e-05,8618.72904188931
+do you know why my card got declined,card_declined,card_declined,0.7630257557035764,0.0,0.2254580613225698,card_declined,0.9994126434078936,1.198e-05,617.8576669190079
+why my card stop working,card_declined,card_declined,0.5675959108480896,0.0,0.2239169552922248,card_declined,0.961199591560069,1.171e-05,619.2885409109294
+my card declined,card_declined,card_declined,0.7744244055561931,0.0,0.224707880988717,card_declined,0.9996927728618769,1.153e-05,573.0483748484403
+i was in australia trying to buy chips and my cards got declined,card_declined,card_declined,0.7170379996484653,0.0,0.2420409582555294,card_declined,0.999542207589584,1.252e-05,579.0883330628276
+i was in thailand trying to buy candies and my card got declined,card_declined,card_declined,0.8723083784003687,0.0,0.2286660019308328,card_declined,0.9997324467414286,1.197e-05,576.9318339880556
+why was my card got declined when i am trying to pay for dinner when i am in vietnam,card_declined,card_declined,0.6408551138231215,0.0,0.2358751371502876,card_declined,0.9990323617328282,1.242e-05,583.3449580240995
+i could not buy food using my card when i was in vietnam,card_declined,card_declined,0.3431443395631727,0.0,0.2272089477628469,card_declined,0.9990673427004716,1.252e-05,615.236375015229
+i was in thailand and i could not use my card to buy snacks,card_declined,card_declined,0.3650311588164345,0.0,0.2278750762343406,card_declined,0.9982141020980768,1.197e-05,678.393250098452
+can you explain why i couldn't use my card at target,card_declined,card_declined,0.379623796449054,0.0,0.2400418743491172,card_declined,0.9967403914364038,1.234e-05,588.6326658073813
+why was my card not working at target,card_declined,card_declined,0.7016454921992092,0.0,0.2268750686198473,card_declined,0.9939976985854468,1.134e-05,585.7741248328239
+my credit card was turned down at target and i'd like to know why,card_declined,card_declined,0.5788933789803008,0.0,0.2294590231031179,card_declined,0.9996917006576034,1.197e-05,613.126833923161
+how come i got declined,card_declined,out_of_scope,0.4147670195023916,0.0,0.2239169552922248,card_declined,0.9993318018979692,1.171e-05,626.1355830356479
+why can't i use my credit card,card_declined,damaged_card,0.4843280779839617,0.0,0.2260420005768537,card_declined,0.9833870280720032,1.198e-05,575.9847911540419
+why won't you let me pay with my credit card,card_declined,damaged_card,0.2905741122527642,0.0,0.2295831218361854,card_declined,0.9973210530700652,1.225e-05,1027.5864580180496
+why did i get rejected on my card,card_declined,card_declined,0.5087262131998337,0.0,0.2253749407827854,card_declined,0.9956997386216856,1.198e-05,609.1220830567181
+how come my credit card isn't working,card_declined,damaged_card,0.3597186006607985,0.0,0.2239579334855079,card_declined,0.9965830181674148,1.198e-05,651.6632081475109
+why didn't my card work,card_declined,card_declined,0.5376623002663291,0.0,0.2238750457763672,card_declined,0.9948527102132309,1.18e-05,596.2419579736888
+can you colorize a black and white photo,out_of_scope,out_of_scope,0.62712420732635,0.0,0.2271661069244146,out_of_scope,0.9999005893344576,1.177e-05,1869.8973751161247
+accept incoming phone call,out_of_scope,out_of_scope,0.6270278524613652,0.0,0.2262080088257789,out_of_scope,0.998442456960449,1.132e-05,572.2279998008162
+what do i put on my feet,out_of_scope,out_of_scope,0.3268424972769295,0.0,0.2325829118490219,out_of_scope,0.9999060719005844,1.095e-05,578.8216250948608
+"do a job search on monstercom for jobs in the tech field in arlington, va",out_of_scope,out_of_scope,0.7603668786346388,0.0,0.2284159418195486,out_of_scope,0.999920255344658,1.258e-05,598.0674161110073
+can you check how many miles i walked today when i was out get the info from my phone,out_of_scope,out_of_scope,0.795594217869772,0.0,0.2315000165253877,out_of_scope,0.9998997550400364,1.267e-05,4496.091292006895
+what's the best price on a gray xl ll bean men's parka,out_of_scope,out_of_scope,0.8075790884907331,0.0,0.2258340828120708,out_of_scope,0.9999339624169532,1.231e-05,1938.9659999869764
+find articles that can help me advance my position in my work field,out_of_scope,out_of_scope,0.3693618333023306,0.0,0.231458805501461,out_of_scope,0.999900946890462,1.213e-05,588.5882920119911
+is the movie avatar culturally insensitive,out_of_scope,out_of_scope,0.844999772469722,0.0,0.2252920530736446,out_of_scope,0.9998452902871714,1.15e-05,589.2440830357373
+how do you relieve a hangover,out_of_scope,out_of_scope,0.7733896312683958,0.0,0.2273751888424158,out_of_scope,0.9998701979342554,1.159e-05,566.830542171374
+sell three calls of of nvda,out_of_scope,out_of_scope,0.7944426916811931,0.0,0.2289169933646917,out_of_scope,0.9998619747005728,1.177e-05,583.7871248368174
+how much does it cost to use the parking garage downtown,out_of_scope,out_of_scope,0.6982175147533151,0.0,0.2247081138193607,out_of_scope,0.9999399221272516,1.195e-05,570.8998749032617
+what is my checking account number,out_of_scope,out_of_scope,0.6293013391938207,0.0,0.2305000089108944,out_of_scope,0.9996900327380838,1.15e-05,550.2393329516053
+how many dvds do i currently have on file,out_of_scope,out_of_scope,0.7221829628982634,0.0,0.2281249035149812,out_of_scope,0.999870555472117,1.186e-05,1042.2993751708418
+is gambling legal in my state,out_of_scope,out_of_scope,0.6311083546306785,0.0,0.236540799960494,out_of_scope,0.9997498422825116,1.15e-05,544.6813341695815
+are polar bears on the endangered species list,out_of_scope,out_of_scope,0.7631054198954001,0.0,0.2307919785380363,out_of_scope,0.9998753226267224,1.168e-05,574.551833095029
+what movie is it that says today is a good day to die,out_of_scope,out_of_scope,0.6891348181047555,0.0,0.2281670458614826,out_of_scope,0.9998555392102526,1.213e-05,688.5492498986423
+what is the warranty on my microwave,out_of_scope,out_of_scope,0.7774289049058508,0.0,0.2222501207143068,out_of_scope,0.9998019134130396,1.095e-05,1132.1410830132663
+what supplies do i need to clean my car,out_of_scope,out_of_scope,0.4501979844284794,0.0,0.2276250161230564,out_of_scope,0.9998759185262835,1.177e-05,684.7691249568015
+how many hits have i done today,out_of_scope,out_of_scope,0.8291483164406274,0.0,0.2261670306324958,out_of_scope,0.999872343148793,1.159e-05,1083.6847918108106
+what causes dyslexia,out_of_scope,out_of_scope,0.9205668142069944,0.0,0.2224170602858066,out_of_scope,0.9998852146345244,1.141e-05,568.5472909826785
+scan my photos and tell me which hair style is most suiting for my face,out_of_scope,out_of_scope,0.5440469796852833,0.0,0.2278340980410576,out_of_scope,0.9999102434642076,1.24e-05,566.5465840138495
+what is the extra digits that are sometimes included on my zip code,out_of_scope,out_of_scope,0.7751810466408716,0.0,0.2293752040714025,out_of_scope,0.9999141766761902,1.149e-05,587.3883748427033
+how much is the new nikon camera,out_of_scope,out_of_scope,0.8656749730501859,0.0,0.2359580248594284,out_of_scope,0.9998787788491216,1.168e-05,622.6146670524031
+look up which animal is represented in this year's chinese new year,out_of_scope,out_of_scope,0.7485236764792039,0.0,0.2361249644309282,out_of_scope,0.9999417100552708,1.222e-05,574.5356250554323
+what channel is cw on,out_of_scope,out_of_scope,0.8386398459372831,0.0,0.2331670839339494,out_of_scope,0.999935869517765,1.15e-05,595.023499801755
+what does water taste like,out_of_scope,out_of_scope,0.7437996113323814,0.0,0.2250410616397857,out_of_scope,0.999890458665658,1.141e-05,583.1993750762194
+how can i get a better rate on my card,out_of_scope,damaged_card,0.2646957773361191,0.0,0.2248329110443592,out_of_scope,0.9997061162743368,1.122e-05,1967.0057501643896
+how many kilowatts have i used this month,out_of_scope,out_of_scope,0.7214710744594084,0.0,0.2278750762343406,out_of_scope,0.999929671466158,1.195e-05,574.7814169153571
+which actors have played more than 1 comic book character,out_of_scope,out_of_scope,0.6636276196262653,0.0,0.234041828662157,out_of_scope,0.9998842611792572,1.195e-05,568.2144579477608
+put on an educational program about buddhism,out_of_scope,out_of_scope,0.4757429837984479,0.0,0.2342499792575836,out_of_scope,0.999862332220944,1.177e-05,572.9007918853313
+what is the safest model of airplane to fly in,out_of_scope,out_of_scope,0.9159065374384436,0.0,0.2291251439601183,out_of_scope,0.9999197785820156,1.131e-05,568.7745418399572
+how do i add someone to my account,out_of_scope,freeze_account,0.3160177580654428,0.0,0.2270839177072048,out_of_scope,0.9992344284622108,1.104e-05,594.7634999174625
+give me a list of the biographies written by nyu professors after 2001,out_of_scope,out_of_scope,0.8049944084060706,0.0,0.2306248061358928,out_of_scope,0.9999338432228186,1.267e-05,696.4363751467317
+how long does it take to call an ambulance,out_of_scope,out_of_scope,0.7434270304122845,0.0,0.2295831218361854,out_of_scope,0.9997320893256924,1.177e-05,633.8921249844134
+tell me about that kind of cameras,out_of_scope,out_of_scope,0.6558399790907975,0.0,0.2307500690221786,out_of_scope,0.9999004701515762,1.104e-05,618.5169580858201
+which element on the periodic table is k,out_of_scope,out_of_scope,0.7509742304628603,0.0,0.2281670458614826,out_of_scope,0.9996267758451663,1.168e-05,601.47187509574
+what is the lifespan of a border collie,out_of_scope,out_of_scope,0.9638877229312388,0.0,0.2255830913782119,out_of_scope,0.9998943917270638,1.113e-05,574.1427498869598
+what's the current prevailing interest rate for mortgages in my area,out_of_scope,out_of_scope,0.7875909755039824,0.0,0.2282499335706234,out_of_scope,0.9999547025218424,1.158e-05,602.5277920998633
+is michonne wrong for not working with the kingdom to put on the fair,out_of_scope,out_of_scope,0.507629505602716,0.0,0.2282911445945501,out_of_scope,0.9997511529374614,1.231e-05,570.3306251671165
+can you tell me how to clean a fish tank,out_of_scope,out_of_scope,0.7358910574209382,0.0,0.2367498818784952,out_of_scope,0.9998771103264718,1.122e-05,566.2062498740852
+where does jiu jitsu originate,out_of_scope,out_of_scope,0.7703242989703898,0.0,0.2278750762343406,out_of_scope,0.9998790172097274,1.159e-05,569.1987921018153
+can you tell me today's headlines pleasei,out_of_scope,out_of_scope,0.7376035031659929,0.0,0.2252501435577869,out_of_scope,0.9999302674272116,1.113e-05,764.0796250198036
+how many homeless people are there,out_of_scope,out_of_scope,0.884177346947353,0.0,0.2254159189760685,out_of_scope,0.9999254997414528,1.15e-05,597.2155418712646
+fold my hand,out_of_scope,damaged_card,0.2886718651245959,0.0,0.2231248654425144,out_of_scope,0.9921325851270996,1.123e-05,586.0293749719858
+fun gift ideas to give to grandparents,out_of_scope,out_of_scope,0.5446600339079378,0.0,0.2244580537080764,out_of_scope,0.999876633606226,1.159e-05,615.4512921348214
+how do you unclog a toilet,out_of_scope,out_of_scope,0.7270649095544784,0.0,0.2315419260412454,out_of_scope,0.9998591144694556,1.104e-05,588.8324999250472
+is the polar vortex of 2019 apart of global warming,out_of_scope,out_of_scope,0.8802454904834173,0.0,0.2305421512573957,out_of_scope,0.99985673095705,1.222e-05,612.4533750116825
+start a portfolio on venture capital funding for me to look over,out_of_scope,out_of_scope,0.6055240159821239,0.0,0.2274999860674142,out_of_scope,0.9999448091463224,1.204e-05,583.7384588085115
+what's the newspaper today,out_of_scope,out_of_scope,0.8852061621649804,0.0,0.2259998582303524,out_of_scope,0.999940398906774,1.077e-05,1031.903708120808
+"email my boss, tell him i wont be in today",out_of_scope,out_of_scope,0.6241583621845053,0.0,0.2278750762343406,out_of_scope,0.9996816933277004,1.195e-05,560.8095407951623
+can you tell me what key frank zappa's keep it greasy is in,out_of_scope,out_of_scope,0.7996693544299117,0.0,0.2280410844832658,out_of_scope,0.9999140574916894,1.176e-05,1878.3547498751432
+answer the phone,out_of_scope,out_of_scope,0.7193205454857761,0.0,0.2229579258710146,out_of_scope,0.9995847281389072,1.123e-05,559.6818749327213
+what color is water,out_of_scope,out_of_scope,0.7578228202189619,0.0,0.2232498954981565,out_of_scope,0.9999069062148268,1.132e-05,584.5690001733601
+look up the top 3 selling post modern artists in the united states,out_of_scope,out_of_scope,0.7562994677649572,0.0,0.2284168731421232,out_of_scope,0.9999072637730902,1.222e-05,637.4378330074251
+what's at movies,out_of_scope,out_of_scope,0.7195668496057878,0.0,0.2235840074717998,out_of_scope,0.9999276451983224,1.132e-05,650.9259159211069
+what is the population of south africa,out_of_scope,out_of_scope,0.9388495334636762,0.0,0.2263751812279224,out_of_scope,0.999940398906774,1.104e-05,584.143792046234
+pull up the classifieds and read the career section to me,out_of_scope,out_of_scope,0.6240859950682205,0.0,0.240708002820611,out_of_scope,0.9998529173664786,1.204e-05,642.9685831535608
+how do i get red wine out of a couch cushion,out_of_scope,out_of_scope,0.7066386186197936,0.0,0.228542136028409,out_of_scope,0.9998790172097274,1.131e-05,571.1733328644186
+how do i best deal with the airport,out_of_scope,out_of_scope,0.6828719755762651,0.0,0.2235420979559421,out_of_scope,0.9999030922364486,1.104e-05,581.7977089900523
+tell me the best way to freshen the smell in my car,out_of_scope,out_of_scope,0.7308889483897835,0.0,0.2246671356260776,out_of_scope,0.9998704362928156,1.158e-05,599.6511671692133
+are your step-parent's parents considered your grandparents,out_of_scope,out_of_scope,0.7893814301382374,0.0,0.2321670763194561,out_of_scope,0.9998631664550408,1.177e-05,975.956458132714
+can you delete my saved credit card,out_of_scope,damaged_card,0.421757981390463,0.0,0.229832949116826,freeze_account,0.7002027866887155,1.159e-05,562.441874993965
+where is the best place to mine for gold,out_of_scope,out_of_scope,0.7914862770918771,0.0,0.2296250313520431,out_of_scope,0.9999280027712772,1.177e-05,603.5210001282394
+i want to find new cyberpunk fiction books,out_of_scope,out_of_scope,0.4890462500472971,0.0,0.2264999784529209,out_of_scope,0.9998866448154924,1.113e-05,562.0681659784168
+i'd like to hire a wedding planner and need help finding one,out_of_scope,out_of_scope,0.262098498859185,0.0,0.226916978135705,out_of_scope,0.9999198977744738,1.213e-05,564.0514169353992
+call an uber to take me to the closest grocery store,out_of_scope,out_of_scope,0.6906936436885364,0.0,0.2314590383321046,out_of_scope,0.999947073876698,1.204e-05,695.92116586864
+detail a list of possible job openings in the miami public school system,out_of_scope,out_of_scope,0.8069409096613642,0.0,0.2288331743329763,out_of_scope,0.9998971329639152,1.222e-05,557.7383749186993
+save my text on my laptop hard drive,out_of_scope,out_of_scope,0.2883608584557824,0.0,0.2348748967051506,out_of_scope,0.9998013176012304,1.168e-05,559.1791251208633
+am i too old to be a sugar babyo,out_of_scope,out_of_scope,0.6201452707281496,0.0,0.2254589926451444,out_of_scope,0.999777962398509,1.186e-05,603.6133330781013
+when was the gold rush,out_of_scope,out_of_scope,0.7468973470232503,0.0,0.2241248730570078,out_of_scope,0.9999095283384029,1.141e-05,563.3667500223964
+what are the highest-rated android phones,out_of_scope,out_of_scope,0.8596609046049645,0.0,0.2358329948037862,out_of_scope,0.9998935574378136,1.159e-05,699.2384160403162
+can you tell me the purpose of a safe deposit box,out_of_scope,out_of_scope,0.8114825930972084,0.0,0.2275838050991296,out_of_scope,0.9998505338979452,1.131e-05,550.6766671314836
+can a robot really travel back in time,out_of_scope,out_of_scope,0.716072503244491,0.0,0.2260829787701368,out_of_scope,0.999865192475816,1.168e-05,1420.4541658982637
+what are the words to the chorus for this song,out_of_scope,out_of_scope,0.8695558548551513,0.0,0.2286669332534074,out_of_scope,0.9999506497906104,1.122e-05,1134.8266249988228
+what's the average score on a round of golf,out_of_scope,out_of_scope,0.8545422248522054,0.0,0.2268329262733459,out_of_scope,0.99993658467696,1.122e-05,637.2317080385983
+can you really get arrested for yelling fire in a crowded theater,out_of_scope,out_of_scope,0.7480548482602981,0.0,0.22958405315876,out_of_scope,0.9996236787289412,1.204e-05,670.439625158906
+tell me how i can file a pleading in circuit court,out_of_scope,out_of_scope,0.7492944240944084,0.0,0.2401249948889017,out_of_scope,0.9998616171657796,1.149e-05,582.7869588974863
+is anything being newscasted about the threat of famine in chadu,out_of_scope,out_of_scope,0.7988017704764007,0.0,0.2238750457763672,out_of_scope,0.9998827118136592,1.213e-05,705.4180840495974
+finish the final touches on my newest robotic creation,out_of_scope,report_fraud,0.4905654202522811,0.0,0.2332502044737339,out_of_scope,0.9997441231392132,1.177e-05,901.7924589570612
+how do you repel a bear when you're out on a hike,out_of_scope,out_of_scope,0.7390051730115197,0.0,0.2274590078741312,out_of_scope,0.9998892668350092,1.167e-05,586.7744169663638
+tell me who has the cheapest watch bands on ebay,out_of_scope,out_of_scope,0.7374314644806764,0.0,0.226957956328988,out_of_scope,0.9999166796485692,1.149e-05,606.9554169662297
+can you list all channels of a certain category,out_of_scope,out_of_scope,0.7714668723577884,0.0,0.2298750914633274,out_of_scope,0.9996332083793188,1.177e-05,564.6775830537081
+is it ok to feed dogs people food,out_of_scope,out_of_scope,0.5906521806799007,0.0,0.2263751812279224,out_of_scope,0.9998690061568564,1.168e-05,4255.768124945462
+where does jelly come from,out_of_scope,out_of_scope,0.7353290384182734,0.0,0.2273749560117721,out_of_scope,0.9999302674272116,1.141e-05,569.8734170291573
+how many people have insomnia,out_of_scope,out_of_scope,0.8135005772267419,0.0,0.2242499031126499,out_of_scope,0.9998781829478556,1.141e-05,584.9194170441478
+how many people still live on greenland,out_of_scope,out_of_scope,0.8004327411376703,0.0,0.2269588876515627,out_of_scope,0.9998991591117188,1.104e-05,584.838500013575
+locate jenny at her present position,out_of_scope,out_of_scope,0.511059055285095,0.0,0.2276669256389141,out_of_scope,0.9998060840910962,1.168e-05,563.4933752007782
+what kinds of cereal are gluten free,out_of_scope,out_of_scope,0.9051743719565748,0.0,0.2220829483121633,out_of_scope,0.9999176331638508,1.159e-05,598.3550411183387
+aquire the soundtracks from the movie if i stay and add them to my ipod,out_of_scope,out_of_scope,0.4698797492845442,0.0,0.2329580020159483,out_of_scope,0.99993658467696,1.258e-05,604.5498750172555
+what is the highest belt in karate,out_of_scope,out_of_scope,0.9072128250034528,0.0,0.2343750093132257,out_of_scope,0.9998759185262835,1.104e-05,833.1925419624895
+how many calories does doing 20 situps burn,out_of_scope,out_of_scope,0.8608262637734634,0.0,0.2263749483972787,out_of_scope,0.99987865966884,1.195e-05,560.6840830296278
+what's the cost of a good pegboard,out_of_scope,out_of_scope,0.910353111277422,0.0,0.2251670230180025,out_of_scope,0.9999282411581684,1.113e-05,1067.3450420144943
+add color to the black and white photos,out_of_scope,out_of_scope,0.5795345264535022,0.0,0.2317910548299551,out_of_scope,0.999878063767645,1.168e-05,571.5055409818888
+give me information about the element carbon and its reactions with hydrogen,out_of_scope,out_of_scope,0.642266120672569,0.0,0.2297500614076852,out_of_scope,0.9999210896780104,1.204e-05,658.4526249207556
+find a cleaner that specializes in suede,out_of_scope,out_of_scope,0.6087125031973557,0.0,0.2245840150862932,out_of_scope,0.9999072637730902,1.177e-05,552.4355410598218
+who won in the gsw vs suns game last night,out_of_scope,out_of_scope,0.785077699560082,0.0,0.2297090832144022,out_of_scope,0.9999362271009362,1.204e-05,648.1207078322768
+can you group my photos by location,out_of_scope,out_of_scope,0.5545663461619488,0.0,0.2282091882079839,out_of_scope,0.9999630464869772,1.159e-05,538.0409171339124
+can you mark this note as important,out_of_scope,out_of_scope,0.637783496981979,0.0,0.2309589181095361,out_of_scope,0.9997475784571056,1.159e-05,570.8064159844071
+what is that crunchy stuff on creme bruleo,out_of_scope,out_of_scope,0.7722650457705905,0.0,0.2244170755147934,out_of_scope,0.9998738924837745,1.204e-05,636.7583328392357
+are we allowed to wash our cars during the drought,out_of_scope,out_of_scope,0.7931585912722677,0.0,0.2336669713258743,out_of_scope,0.999922281582968,1.186e-05,625.566708855331
+what is the last time the living room was vacuumed,out_of_scope,out_of_scope,0.8947935204204399,0.0,0.2359168138355016,out_of_scope,0.9998804473745556,1.131e-05,4246.631165966392
+where can i buy new shingles,out_of_scope,out_of_scope,0.6851912562916892,0.0,0.2291251439601183,out_of_scope,0.9999274068115732,1.168e-05,2082.240041811019
+how many keys does a xylophone have,out_of_scope,out_of_scope,0.864734697338097,0.0,0.2284580841660499,out_of_scope,0.9999235926822448,1.168e-05,548.2736250851303
+find engineering programs to apply to,out_of_scope,out_of_scope,0.4511207805818818,0.0,0.2261248882859945,out_of_scope,0.9999189442570324,1.15e-05,911.8818750139326
+tell me who makes the best dvd's for movie storage,out_of_scope,out_of_scope,0.797553406685114,0.0,0.2303340006619691,out_of_scope,0.9999344391863586,1.149e-05,581.1292079742998
+tell me how to get rid of a spirit that's haunting me,out_of_scope,out_of_scope,0.6726062575763329,0.0,0.2302920911461115,out_of_scope,0.9998408809194,1.167e-05,2160.9776669647545
+how many acres do you need to buy a horse,out_of_scope,out_of_scope,0.6703802342896754,0.0,0.2328329719603061,out_of_scope,0.999905475968502,1.186e-05,2052.750957896933
+do we actually have a soul,out_of_scope,out_of_scope,0.5900077399090778,0.0,0.2254999708384275,out_of_scope,0.9998560159058912,1.15e-05,558.6936669424176
+what's the way for delta to cancel a flight,out_of_scope,out_of_scope,0.8267668961112458,0.0,0.2288329415023327,out_of_scope,0.9998624513992797,1.122e-05,1946.7439169529823
+make me a map of all earthquake hotspots in the continental us,out_of_scope,out_of_scope,0.7832393018904628,0.0,0.2326669637113809,out_of_scope,0.9999406372966204,1.222e-05,592.9769168142229
+what is the animal for this chinese new year,out_of_scope,out_of_scope,0.8914218425056267,0.0,0.2342918887734413,out_of_scope,0.9999477890584576,1.122e-05,563.3148751221597
+find out how to deodorize a car,out_of_scope,out_of_scope,0.6642535877720644,0.0,0.2302920911461115,out_of_scope,0.9999040457314982,1.177e-05,580.2084170281887
+give me an energy usage breakdown for march,out_of_scope,out_of_scope,0.7426942408034805,0.0,0.2273330464959144,out_of_scope,0.9999507689867486,1.168e-05,670.5992501229048
+describe to me how i can learn to make small talk,out_of_scope,out_of_scope,0.6379203906957989,0.0,0.2335000317543745,out_of_scope,0.999906310274972,1.195e-05,560.7547918334603
+go and check the fridge,out_of_scope,out_of_scope,0.6274266027584227,0.0,0.2270829863846302,out_of_scope,0.9998785404885726,1.141e-05,652.8482912108302
+what movies are playing,out_of_scope,out_of_scope,0.8882905887627011,0.0,0.2243339549750089,out_of_scope,0.9999412332751232,1.132e-05,573.1885000132024
+what's the blue book value of my car,out_of_scope,out_of_scope,0.8183697996655005,0.0,0.2269998658448457,out_of_scope,0.9998983248184908,1.113e-05,816.4043331053108
+power up my generator,out_of_scope,out_of_scope,0.3627038667064852,0.0,0.2281251363456249,out_of_scope,0.9994147866372564,1.132e-05,575.3172079566866
+what is the breath to compression ratio for cpr,out_of_scope,out_of_scope,0.9288700920666724,0.0,0.227582873776555,out_of_scope,0.9998729390465786,1.122e-05,596.5470001101494
+when does tiger woods play next,out_of_scope,out_of_scope,0.7566221876041395,0.0,0.2263749483972787,out_of_scope,0.9999308633958958,1.15e-05,660.6747501064092
+show me a tabulation of reviews for lcd tv's on amazon,out_of_scope,out_of_scope,0.7633813410576981,0.0,0.2260829787701368,out_of_scope,0.9999485042370908,1.222e-05,1883.1034158356488
+who teaches english near me,out_of_scope,out_of_scope,0.7860165462876597,0.0,0.2301251515746116,out_of_scope,0.9999445707518436,1.141e-05,572.5609161891043
+compare prices of malt-o-meal to kelloggs,out_of_scope,out_of_scope,0.707143566962312,0.0,0.2395829651504755,out_of_scope,0.9999195402044172,1.195e-05,1915.1137499138713
+how many ppm of particulate is in my local water,out_of_scope,out_of_scope,0.8189579586504149,0.0,0.2281668130308389,out_of_scope,0.9999115545331496,1.186e-05,542.0144170057029
+when was my lawn last mowed,out_of_scope,out_of_scope,0.5389247998934182,0.0,0.2269998658448457,out_of_scope,0.9999412332751232,1.159e-05,587.188416859135
+make a list of side hustles i could start today to make a little extra cash,out_of_scope,out_of_scope,0.6033812010953122,0.0,0.2303330693393945,out_of_scope,0.99985375159272,1.249e-05,561.3598751369864
+what's the current demand for wood from rain forests,out_of_scope,out_of_scope,0.8205222904811792,0.0,0.2297500614076852,out_of_scope,0.9999486234366108,1.122e-05,598.7383751198649
+who are the nominees for best picture this year,out_of_scope,out_of_scope,0.8523107633866673,0.0,0.2280829939991235,out_of_scope,0.999914891812595,1.186e-05,666.3777499925345
+what time does my ex-boss leave the office,out_of_scope,out_of_scope,0.7738848501759888,0.0,0.2272080164402723,out_of_scope,0.9999276451983224,1.186e-05,556.4347920008004
+"i have too many credit cards, is there any way you can help me organize them",out_of_scope,out_of_scope,0.6335951794158036,0.0,0.2303749788552522,out_of_scope,0.9993052544326704,1.249e-05,569.1214159596711
+display history of sparta,out_of_scope,out_of_scope,0.7105427854021644,0.0,0.221791910007596,out_of_scope,0.9999311017761936,1.141e-05,556.8240000866354
+consult the gq website to find what men wear to weddings,out_of_scope,out_of_scope,0.7247263267510727,0.0,0.2283749636262655,out_of_scope,0.999922043204773,1.222e-05,576.3763340655714
+look up a good broker for mutual funds,out_of_scope,out_of_scope,0.6255196064428968,0.0,0.2380830701440572,out_of_scope,0.9999371806494092,1.168e-05,604.6793339774013
+find my wallet,out_of_scope,out_of_scope,0.4712753841993509,0.0,0.2325000241398811,out_of_scope,0.8354075513643638,1.123e-05,577.9676251113415
+would it be legal to have battles to the death in a homemade colosseum,out_of_scope,out_of_scope,0.5969452070441532,0.0,0.231166835874319,out_of_scope,0.9998218138652964,1.249e-05,575.3611249383539
+can you give me the most current market news,out_of_scope,out_of_scope,0.8259483355561226,0.0,0.227333977818489,out_of_scope,0.9999325320955504,1.177e-05,570.8685838617384
+what battery percentage is my phone at,out_of_scope,out_of_scope,0.6472299849322654,0.0,0.225667143240571,out_of_scope,0.999883426905735,1.159e-05,597.7807499002665
+when is it cheapest to travel to hawaii,out_of_scope,out_of_scope,0.6299552440250111,0.0,0.2236249856650829,out_of_scope,0.9999405181016902,1.195e-05,556.230042129755
+can you add a bag to my reservation,out_of_scope,out_of_scope,0.4934050737168224,0.0,0.2261251211166381,out_of_scope,0.9997973852696536,1.168e-05,4276.023457990959
+has ko gone up or down,out_of_scope,out_of_scope,0.6451612700654541,0.0,0.2281670458614826,out_of_scope,0.9993418022060327,1.15e-05,681.3764579128474
+close all internet tabs,out_of_scope,out_of_scope,0.619456628699967,0.0,0.2273749560117721,out_of_scope,0.9990464014250624,1.132e-05,594.0182919148356
+disconnect from wifi immediately please,out_of_scope,out_of_scope,0.4244486300042534,0.0,0.2225830685347318,out_of_scope,0.9958674734450196,1.15e-05,821.2615000084043
+what time did i get the last text message i received,out_of_scope,out_of_scope,0.786258148586772,0.0,0.2268329262733459,out_of_scope,0.9999221623902256,1.195e-05,598.5249590594321
+how do i use my microwaves defrost,out_of_scope,out_of_scope,0.5099562411105569,0.0,0.2311670687049627,out_of_scope,0.9998415959451852,1.122e-05,588.230875087902
+can you tell me what happened to han solo in episode 4,out_of_scope,out_of_scope,0.7427546918016451,0.0,0.2332499716430902,out_of_scope,0.9998561350834736,1.149e-05,596.5514169074595
+get me a list of divorce attorneys in the new york area,out_of_scope,out_of_scope,0.7785339923540917,0.0,0.2289169933646917,out_of_scope,0.9999107202150284,1.213e-05,606.8815411999822
+can you check to see which parking garages are open downtown,out_of_scope,out_of_scope,0.7785012768065873,0.0,0.2294168807566166,out_of_scope,0.9999448091463224,1.14e-05,566.2694158963859
+check the status of my amazon orders for me,out_of_scope,out_of_scope,0.6927543207921857,0.0,0.2277079038321972,out_of_scope,0.999896656226848,1.186e-05,558.6333330720663
+how much is auto febreeze on amazon,out_of_scope,out_of_scope,0.7508290153993795,0.0,0.2240838948637247,out_of_scope,0.9998890284646847,1.113e-05,604.232583893463
+what are sigmund freud's most famous books,out_of_scope,out_of_scope,0.8796884966912097,0.0,0.2260829787701368,out_of_scope,0.999837067447481,1.186e-05,585.8721248805523
