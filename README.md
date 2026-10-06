@@ -458,7 +458,6 @@ The dashboard has its own tests and type check (`cd dashboard && npm test && npm
 - [x] Docker setup
 - [x] Automated test that the threshold simulation in `evaluate.py` matches the live cascade
 - [ ] Example domains with synthetic data, labeled as synthetic (electric-vehicle after-sales, supplier communication, internal requests)
-- [ ] Jev adapter (if access is available)
 - [x] Dashboard (React + TypeScript): review queue, overview, charts, request history and a form to try a text
 - [ ] Dashboard: accuracy charts (these need labeled ground truth, which production requests do not have)
 - [ ] Threshold auto-tuning from review feedback
