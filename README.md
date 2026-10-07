@@ -2,7 +2,15 @@
 
 **A cost-aware decision layer for routing text requests.** RouteIQ classifies incoming requests (emails, support tickets, purchase requests, form submissions), decides with a cheap and fast model first, escalates to a stronger LLM only when confidence is low, falls back to a human when even that is unsure, and writes the outcome to a target system over REST. Every step is measured for accuracy, cost and latency.
 
-> Status: MVP in active development. Numbers in the results section are filled in only from real runs. See [Roadmap](#roadmap).
+![The RouteIQ dashboard: an overview of a day of requests](docs/images/overview.png)
+
+**At a glance** (measured on 300 held-out CLINC150 examples, see [Results](#results-clinc150)):
+
+- The cascade matches the accuracy of an LLM-only setup (98.3%) at about 54% of its cost ($0.0064 against $0.0118 per 1,000 requests).
+- Every request the baseline accepted was right (139 of 139), and 2% of requests went to a person.
+- Python, FastAPI, SQLite and scikit-learn behind a React and TypeScript dashboard, packaged with Docker, with more than 1,100 automated tests.
+
+The numbers in this README come from real runs, and tests check that they can be reproduced. The [Roadmap](#roadmap) lists what is not done.
 
 ---
 
@@ -50,6 +58,34 @@ RouteIQ explores a simple idea: **use the cheapest model that is confident enoug
           metrics store (SQLite): label, confidence, tier, cost, latency
 ```
 
+## The dashboard in pictures
+
+The screenshots show the CLINC150 test set replayed through the cascade (`scripts/replay_demo.py`, see [Demo data](#demo-data)): the decisions are the ones the real models made, while the times and the reviewers' decisions are simulated. The *Try it* screenshot is a live answer of the trained baseline model.
+
+**Overview.** Totals for a time window: requests, cost, p95 latency, how requests ended and the delivery status. Reviewer agreement is shown with a note that it is not accuracy.
+
+![Overview](docs/images/overview.png)
+
+**Review queue.** The requests the cascade was unsure about, oldest first, with one button per label. The model's suggestion is marked, but a person picks the label.
+
+![Review queue](docs/images/review-queue.png)
+
+**History.** Every request, with filters, search and paging. A row opens to show the full text and the delivery state.
+
+![History](docs/images/history.png)
+
+**Charts.** Requests, cost and latency over time, with a table of the same numbers.
+
+![Charts](docs/images/charts.png)
+
+**Evaluation.** Accuracy with 95% intervals, cost and latency of the four setups, how the cascade handled the examples, and calibration. It is measured offline on labeled examples, not on live traffic.
+
+![Evaluation](docs/images/evaluation.png)
+
+**Try it.** Send a text through the cascade and see the label, the confidence, the tier, the cost and the latency.
+
+![Try it](docs/images/try-it.png)
+
 ## Features
 
 - **Config-driven.** Categories, thresholds, models and targets live in YAML. A new use case needs labeled data and a config, including a one-line description of each label for the LLM prompt.
@@ -57,9 +93,9 @@ RouteIQ explores a simple idea: **use the cheapest model that is confident enoug
 - **Confidence-based cascade.** Two thresholds decide between accept, escalate and human review.
 - **Human-in-the-loop queue.** Low-confidence items are stored with the model's suggestion for a person to confirm or correct.
 - **Integration adapters.** Webhook, mock ERP (OData-style REST) and JSON Lines export out of the box. Delivery runs after the response, and its status is tracked per request.
-- **Dashboard.** A React UI served by the API under `/dashboard/`: a review queue for a person to confirm or correct the model's suggestion, an overview with cost, latency and delivery status, charts over time, a searchable request history, and a form to try a text.
+- **Dashboard.** A React UI served by the API under `/dashboard/`: a review queue for a person to confirm or correct the model's suggestion, an overview with cost, latency and delivery status, charts over time, a searchable request history, the offline evaluation with confidence intervals, and a form to try a text.
 - **Built-in evaluation.** Accuracy, macro-F1, cost per 1,000 requests, p50/p95 latency, calibration and escalation rate, all from one command.
-- **One worked example.** Ships with a bank-support scenario built on the public CLINC150 dataset. More example domains are planned (see [Roadmap](#roadmap)).
+- **Worked examples.** A bank-support scenario built on the public CLINC150 dataset, and an electric-vehicle after-sales domain on synthetic data that shows a new domain needs only a spec and a config. More are planned (see [Roadmap](#roadmap)).
 
 ## Quick start
 
@@ -120,12 +156,23 @@ docker compose up --build
 
 The first build takes a few minutes: it installs the dependencies, downloads CLINC150, and trains the baseline inside the image. The API is then available at `http://localhost:8000`. It is published on localhost only, because it has no authentication. The API key is read from `.env` when the container starts and is not stored in the image. The SQLite database lives in the `routeiq-data` volume and survives restarts; `docker compose down -v` deletes it. The mock ERP keeps its tickets in memory, so they reset on restart. The image also contains the built dashboard: open `http://localhost:8000/dashboard/`.
 
+### Look at the dashboard without calling a model
+
+A new installation has no requests, so every screen is empty. This fills a separate database with the CLINC150 test set, replayed through the cascade from the answers the real models gave when they were evaluated. No model is called and nothing costs money. It needs the baseline trained in the steps above and the dashboard built (see [Dashboard](#dashboard)):
+
+```bash
+python scripts/replay_demo.py                    # writes demo.db
+ROUTEIQ_DB=demo.db OPENROUTER_API_KEY=unused uvicorn routeiq.api:app
+```
+
+Open `http://localhost:8000/dashboard/`. With the key set to `unused` the language model cannot answer, so a text you send through *Try it* that the baseline is not sure about goes to the review queue; use your real key to see the whole cascade. `ROUTEIQ_DB` keeps the demo apart from your real database. More in [Demo data](#demo-data).
+
 ## API
 
 | Endpoint | Purpose |
 |---|---|
 | `GET /health` | Liveness check |
-| `GET /config` | The task, the labels with their descriptions, the tiers with their thresholds, and the type of the delivery target. Target URLs, file paths, secret names and prices are never returned |
+| `GET /config` | The task, the labels with their descriptions, the tiers with their thresholds, the type of the delivery target, where the data comes from (`data_source`) and the example sentences of the *Try it* screen. Target URLs, file paths, secret names and prices are never returned |
 | `POST /route` | Body `{"text": "..."}` (1 to 5,000 characters). Runs the cascade and stores the request |
 | `GET /requests` | Request history with filters, paging and a total count (see below) |
 | `GET /review?limit=50&offset=0` | Requests waiting for a person, oldest first, with the model's suggestion. The header `X-Total-Count` holds the number waiting |
@@ -133,6 +180,7 @@ The first build takes a few minutes: it installs the dependencies, downloads CLI
 | `POST /deliveries/retry?limit=100` | Resends deliveries that failed, or that have been pending for more than 5 minutes (for example after a restart), oldest first |
 | `GET /stats?since=...` | Totals for everything or for a window: requests, accepted per tier, human-review, delivery and reviewer-agreement counts, cost, average and p95 latency |
 | `GET /stats/timeseries` | The same kind of numbers per hour or per day, for charts (see below) |
+| `GET /evaluation` | Accuracy with 95% intervals, macro-F1, cost, latency and calibration of the four setups (baseline, LLM, cascade, cascade with human review), computed from the recorded predictions of the test split. It is measured offline on labeled examples, not on live traffic. `404` when nothing is recorded for the configuration |
 
 `action` is `accepted` or `human_review`. `tier` names the tier that produced the label (or the last suggestion). `degraded` is `true` when a tier failed and the cascade fell back to what it had; the error details are logged and stored, not returned.
 
@@ -181,8 +229,9 @@ Open `http://localhost:8000/dashboard/`. Node 20.19 or later is needed to build.
 | Review queue | Requests waiting for a person, oldest first, with one button per label. The model's suggestion is marked but not preselected. The list refreshes every 10 seconds. If somebody else already decided a request, you get a notice instead of an overwritten decision |
 | Overview | Totals for the last 24 hours, 7 days or all time: requests, cost, p95 latency, requests where a tier failed, how requests ended, and the delivery status with a button to resend failed deliveries |
 | Charts | Requests (accepted or sent to a person), cumulative cost and average latency per hour or day, and a table of the same numbers below the charts |
+| Evaluation | Accuracy of the baseline, the LLM, the cascade and the cascade with human review, each with a 95% interval, plus macro-F1, cost and latency, how the cascade handled the examples, and calibration. It is measured offline on labeled examples (the recorded predictions of the test split) and the screen says it is not live traffic. The last setup assumes a person is always right |
 | History | Every request, newest first, with filters (outcome, review, delivery, tier, tier failure), text search and paging. Filters and page are kept in the address, so a view can be bookmarked. A row opens to show the full text and the delivery problem |
-| Try it | Send a text through the cascade and see its label, confidence, tier, cost and latency. The text is stored like any other request and may call the paid model. Ctrl or Cmd + Enter sends |
+| Try it | Send a text through the cascade and see its label, confidence, tier, cost and latency. The text is stored like any other request and may call the paid model. Ctrl or Cmd + Enter sends. The example sentences of the config are buttons that fill the box without sending it |
 
 Times are shown in UTC. The overview shows reviewer agreement next to a note that it is not the model's accuracy (see [Statistics](#statistics)).
 
@@ -190,14 +239,12 @@ The dashboard has no login, like the API. Publish it on localhost only, or put b
 
 ### Demo data
 
-A new installation has no requests, so every screen is empty. To see the dashboard filled without real traffic, write synthetic requests into a separate database and start the API on it:
+A new installation has no requests, so every screen is empty (the short version is in the [Quick start](#look-at-the-dashboard-without-calling-a-model)). Two scripts write a separate database, which you open by starting the API on it with `ROUTEIQ_DB`:
 
-```bash
-python scripts/seed_demo.py                    # writes demo.db
-ROUTEIQ_DB=demo.db uvicorn routeiq.api:app
-```
+- `scripts/replay_demo.py` replays the 300 examples of the CLINC150 test set through the real cascade, using the answers the baseline and the LLM gave when they were evaluated (`demo/clinc150_test_predictions.csv`, made with `scripts/export_predictions.py` from the saved evaluation). The decisions, confidences, costs and latencies are real, and a test checks that the replay gives the numbers of the results table. What is **not** real: the times (spread over the last day, so the 24-hour views are full) and the reviewers' decisions (simulated as a person who always picks the true label, the assumption of the "cascade + human review" row). No model is called.
+- `scripts/seed_demo.py` writes synthetic requests from a few templates, with outcomes drawn at random from a fixed seed. They are not results of the models. It exists to produce states that are hard to cause on purpose, such as failed and stuck deliveries and requests where a tier failed, so that those parts of the dashboard can be tried.
 
-The texts come from a few templates, and the outcomes (confidence, cost, latency, which requests were reviewed, which deliveries failed) are drawn at random with a fixed seed, so the same command gives the same history. They are not results of the models. The script calls no model, and it refuses to write into a database that already has requests unless `--add` is given. The API itself still needs `OPENROUTER_API_KEY` to start, as with the real configuration.
+Both refuse to write into a database that already has requests unless `--add` is given, so they cannot bury real data under made-up data. The recorded texts come from CLINC150 (CC BY 3.0), see [`demo/README.md`](demo/README.md).
 
 For development, run the API and `npm run dev` in `dashboard/` (http://localhost:5173/dashboard/); the dev server forwards the API paths, so no CORS setup is needed. After an API change, regenerate the schema and the types:
 
@@ -264,6 +311,14 @@ label_descriptions:                     # one line per label, used in the LLM pr
   freeze_account: the customer wants the account blocked or locked.
   out_of_scope: anything else, including messages unrelated to banking.
 
+examples:                               # sentences offered as buttons on the Try it screen
+  - I lost my debit card yesterday
+  - my card got declined at the store
+  - there is a charge on my statement that I did not make
+  - please freeze my account
+  - my card is cracked and will not read
+  - what is the weather like today
+
 tiers:
   - name: baseline
     model: sklearn_tfidf_logreg
@@ -281,6 +336,8 @@ target:
   type: mock_erp
   url: http://localhost:8000/mock-erp/api/tickets
 ```
+
+`data_source` says where the labeled data comes from: `public`, `synthetic` or `private`. For `synthetic` the dashboard shows a note on every screen, because accuracy on generated text says nothing about real data. `examples` (at most 12 short sentences) are offered as buttons on the *Try it* screen. Both are optional, and the config is validated at startup with mistakes reported at their location.
 
 ## Adding a model
 
@@ -313,6 +370,7 @@ Included adapters:
 | Domain | Source | Notes |
 |---|---|---|
 | `clinc150` | CLINC150 (`clinc_oos` on Hugging Face), public intent-classification dataset | Main benchmark, real human-written text, includes out-of-scope queries |
+| `ev_after_sales` | Synthetic text generated from templates by `routeiq/synthetic.py` | An example of a second domain: it needs only a spec and a config. The templates of each label are divided between train, validation and test, so a test pattern was never seen in training. Accuracy on it says nothing about real data |
 
 No real company data is included.
 
@@ -342,10 +400,12 @@ CLINC150 is released under CC BY 3.0 (see the dataset card on Hugging Face). If 
 
 The cascade, the evaluation and the integrations do not depend on the CLINC150 data. The bank-support scenario is the one worked example; a new domain takes these steps:
 
-1. Prepare labeled `train.csv`, `val.csv` and `test.csv` files (columns `text,label`) under `data/`. `data/prepare_clinc.py` shows how it is done for CLINC150.
+1. Put labeled `train.csv`, `val.csv` and `test.csv` files (columns `text,label`) in `data/<domain>/`, where `<domain>` is the `domain` of the config. `data/prepare_clinc.py` shows how it is done for CLINC150. Without data of your own, generate synthetic data: write the sentence templates of each label in `data/synthetic/<domain>.yaml` and run `python -m routeiq.synthetic --config configs/<domain>.yaml` (see `data/synthetic/ev_after_sales.yaml`).
 2. Create a config under `configs/` with the labels, thresholds and a target. The config is validated at startup and mistakes are reported with their location.
 3. Describe what is being classified (`task`) and each label (`label_descriptions`) in the config. They are placed in the system prompt of the LLM tier. Every label needs a description, and the descriptions matter: they decide how the LLM treats the confusable labels and the out-of-scope class, so check them on the validation split, not the test split.
 4. Run `python -m routeiq.train` and `python -m routeiq.evaluate` with the new config.
+
+`configs/ev_after_sales.yaml` is a second domain built this way: the after-sales service of an electric-vehicle maker, on synthetic data. Its thresholds were copied from the CLINC150 config and are not tuned. The generator divides the *templates* of every label between train, validation and test, so a baseline does not get credit for patterns it saw in training; the score it reaches still says nothing about real text, which is why this README gives no results table for it. In Docker only the CLINC150 baseline is trained; other domains run locally.
 
 ## Evaluation
 
@@ -392,7 +452,10 @@ routeiq/
 ├── configs/                 # YAML use-case definitions (one per domain)
 ├── dashboard/               # React UI (see dashboard/README.md)
 ├── data/
-│   └── prepare_clinc.py     # builds the train, validation and test files
+│   ├── prepare_clinc.py     # builds the CLINC150 train, validation and test files in data/clinc150/
+│   └── synthetic/           # specs of generated domains: the sentence templates of every label
+├── demo/                    # recorded predictions of the CLINC150 test set (see demo/README.md)
+├── docs/images/             # screenshots of the dashboard
 ├── routeiq/
 │   ├── api.py               # FastAPI app and its endpoints
 │   ├── cascade.py           # threshold-based routing logic
@@ -400,15 +463,18 @@ routeiq/
 │   ├── dashboard.py         # serves the built UI under /dashboard/
 │   ├── delivery.py          # sends decisions to the target and tracks the status
 │   ├── evaluate.py          # metrics, calibration and threshold sweep
+│   ├── evaluation.py        # the report behind GET /evaluation, from the recorded predictions
 │   ├── redact.py            # masks URLs in error messages before they are shown
+│   ├── replay.py            # replays recorded model answers through the cascade into a database
 │   ├── schemas.py           # request and response models of the API
 │   ├── store.py             # SQLite store: requests, review queue, deliveries
+│   ├── synthetic.py         # generates synthetic labeled data from a spec
 │   ├── timeutil.py          # UTC and time bucket helpers
 │   ├── train.py             # baseline training
 │   ├── views.py             # builds the public views (config, request items)
 │   ├── models/              # classifier adapters and registry
 │   └── integrations/        # JSONL export, webhook, mock ERP
-├── scripts/                 # export_openapi.py (schema for the UI types), seed_demo.py (synthetic demo data)
+├── scripts/                 # export_openapi.py (schema for the UI types); export_predictions.py, replay_demo.py and seed_demo.py (demo data)
 ├── tests/
 ├── Dockerfile
 ├── docker-compose.yml
@@ -424,6 +490,8 @@ pytest
 ```
 
 Tests cover the cascade decisions at threshold boundaries (and that the threshold simulation in `evaluate.py`, which produces the results table, makes the same decisions as the live cascade), the OpenRouter adapter (response parsing, retries), the API routes and their OpenAPI contract, the review queue, request history and statistics, delivery tracking, the integrations, the SQLite store with its schema migration and indexes, and config validation. LLM and network calls are mocked in tests.
+
+Several tests tie this README to the code: the replay of the recorded predictions and the report behind the Evaluation screen give the figures of the results table, its calibration values and the 139 requests the baseline accepted, and the generator of the synthetic domain is checked to give the same data every time, to give every split templates of its own, and never to repeat a text.
 
 The dashboard has its own tests and type check (`cd dashboard && npm test && npm run typecheck`). They run in Vitest with a mocked API, so no server is needed.
 
@@ -447,6 +515,8 @@ The dashboard has its own tests and type check (`cd dashboard && npm test && npm
 - The mock ERP keeps its tickets in memory and the application is designed for a single process; neither is meant for production use.
 - The dashboard does not record who made a decision: a review is stored with the label and the time only, so there is no audit trail per person.
 - The history screen does not refresh by itself, because new requests would move the rows while somebody reads. It has a Refresh button; the review queue and the overview poll.
+- The thresholds of the electric-vehicle example domain were copied from CLINC150 and not tuned, and its data is synthetic.
+- There is no hosted demo: the project is meant to be run locally (see the [Quick start](#quick-start)). The screenshots above were made from a local run.
 
 ## Roadmap
 
@@ -457,9 +527,10 @@ The dashboard has its own tests and type check (`cd dashboard && npm test && npm
 - [x] Mock ERP integration
 - [x] Docker setup
 - [x] Automated test that the threshold simulation in `evaluate.py` matches the live cascade
-- [ ] Example domains with synthetic data, labeled as synthetic (electric-vehicle after-sales, supplier communication, internal requests)
+- [x] Example domain with synthetic data, labeled as synthetic: electric-vehicle after-sales
+- [ ] More example domains (supplier communication, internal requests)
 - [x] Dashboard (React + TypeScript): review queue, overview, charts, request history and a form to try a text
-- [ ] Dashboard: accuracy charts (these need labeled ground truth, which production requests do not have)
+- [x] Dashboard: offline evaluation screen (accuracy needs labeled ground truth, which production requests do not have, so it is measured on labeled examples and not on live traffic)
 - [ ] Threshold auto-tuning from review feedback
 - [ ] Drift monitoring
 
