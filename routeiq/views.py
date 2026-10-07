@@ -1,4 +1,4 @@
-from routeiq.schemas import MAX_TEXT_LENGTH, ConfigResponse, LabelInfo, TierInfo
+from routeiq.schemas import ConfigResponse, LabelInfo, TierInfo
 from routeiq.redact import redact_urls
 from routeiq.schemas import RequestItem
 
@@ -23,9 +23,7 @@ def request_item(row):
         delivered_at=row["delivered_at"],
     )
 
-def describe_config(config=None, labels=None, tiers=None, demo=None):
-    """`demo` is the DemoSettings of the public demo, or None."""
-    max_text_length = demo.max_text if demo is not None else MAX_TEXT_LENGTH
+def describe_config(config=None, labels=None, tiers=None):
     if config is not None:
         descriptions = config.get("label_descriptions") or {}
         return ConfigResponse(
@@ -44,8 +42,6 @@ def describe_config(config=None, labels=None, tiers=None, demo=None):
             target_type=(config.get("target") or {}).get("type"),
             data_source=config.get("data_source"),
             examples=list(config.get("examples") or []),
-            demo=demo is not None,
-            max_text_length=max_text_length,
         )
     return ConfigResponse(
         domain=None,
@@ -59,6 +55,4 @@ def describe_config(config=None, labels=None, tiers=None, demo=None):
         target_type=None,
         data_source=None,
         examples=[],
-        demo=demo is not None,
-        max_text_length=max_text_length,
     )

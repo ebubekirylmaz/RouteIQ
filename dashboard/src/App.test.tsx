@@ -120,38 +120,3 @@ describe("the note about synthetic data", () => {
     expect(note()).not.toBeInTheDocument();
   });
 });
-
-describe("the note about the public demo", () => {
-  it("says what happens to what a visitor sends, on every screen", async () => {
-    serveReviewApi([], undefined, { demo: true, max_text_length: 500 });
-    renderWithProviders(<App />, { route: "/overview" });
-
-    const note = await screen.findByRole("note");
-    expect(note).toHaveTextContent("Public demo");
-    expect(note).toHaveTextContent(/stored, can be seen by everyone/);
-    expect(note).toHaveTextContent(/deleted when the demo resets/);
-    expect(note).toHaveTextContent(/do not enter personal data/);
-    expect(note).toHaveTextContent(/limited/);
-
-    await userEvent.click(screen.getByRole("link", { name: "Try it" }));
-    expect(await screen.findByRole("heading", { level: 1, name: "Try it" })).toBeInTheDocument();
-    expect(screen.getByRole("note")).toHaveTextContent("Public demo");
-  });
-
-  it("is not shown for a normal service", async () => {
-    serveReviewApi([], undefined, { demo: false });
-    renderWithProviders(<App />, { route: "/overview" });
-    await screen.findByRole("heading", { level: 1, name: "Overview" });
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(screen.queryByRole("note")).not.toBeInTheDocument();
-  });
-
-  it("comes with the note about synthetic data when both are true", async () => {
-    serveReviewApi([], undefined, { demo: true, data_source: "synthetic", domain: "ev_after_sales" });
-    renderWithProviders(<App />, { route: "/overview" });
-    await waitFor(() => expect(screen.getAllByRole("note")).toHaveLength(2));
-    expect(screen.getAllByRole("note")[0]).toHaveTextContent("Public demo");
-    expect(screen.getAllByRole("note")[1]).toHaveTextContent("Synthetic data");
-  });
-});
-

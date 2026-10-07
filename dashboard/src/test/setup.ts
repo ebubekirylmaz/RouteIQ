@@ -1,10 +1,14 @@
 import "@testing-library/jest-dom/vitest";
 
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { cloneElement, type ReactElement } from "react";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 
 import { server } from "./server";
+
+// The default wait of findBy and waitFor is one second. When many test files run at once, the first
+// load of a lazy screen (the chart library) can take longer, and the test failed for no reason.
+configure({ asyncUtilTimeout: 4000 });
 
 // The browser resolves "/review" against the page. Node's fetch needs an absolute URL, so the
 // tests resolve it against the jsdom origin, the same thing the browser does.

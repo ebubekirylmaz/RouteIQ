@@ -4,7 +4,7 @@ Every text is a real example, and every tier's answer (label, confidence, cost, 
 when the model was evaluated. The cascade itself (`route`) runs on those answers, so the decisions are
 what the live service would decide. No model is called and nothing costs money.
 
-Used by scripts/replay_demo.py and by the public-demo mode of the service (routeiq/demo.py).
+Used by scripts/replay_demo.py, which fills a database for trying the dashboard.
 """
 import random
 import sqlite3

@@ -35,12 +35,6 @@ class MockErpStore:
             self._by_external[data["ExternalID"]] = ticket
             return ticket, True
 
-    def clear(self):
-        """Forgets every ticket. The public demo does this when it resets."""
-        with self._lock:
-            self._tickets.clear()
-            self._by_external.clear()
-
     def list(self, top, skip):
         with self._lock:
             return list(self._tickets[skip:skip + top]), len(self._tickets)

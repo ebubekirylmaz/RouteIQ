@@ -356,6 +356,7 @@ describe("useResolveReview outcome callback", () => {
     withApi();
     const { result } = renderHook(() => useResolveReview(), { wrapper: createWrapper() });
     await act(() => result.current.mutateAsync({ id: 1, label: "a" }));
-    expect(result.current.isSuccess).toBe(true);
+    // The hook's own state can be a render behind the promise that act waited for.
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });
 });
